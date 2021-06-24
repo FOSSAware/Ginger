@@ -1,4 +1,4 @@
-#region License
+﻿#region License
 /*
 Copyright © 2014-2021 European Support Limited
 
@@ -16,14 +16,15 @@ limitations under the License.
 */
 #endregion
 
-namespace GingerCore.ALM.Octane
+
+namespace GingerCore.ALM.JIRA
 {
-    public class OctaneSettings
+    public class JiraTestStep
     {
-        public string CertificateFilePath { get; set; }
-
-        public string CertificatePassword { get; set; }
-
-        public bool IsCertificatePasswordEncrypted { get; set; } = false;
+        public string StepID { get; set; }
+        public string StepName { get; set; }
+        public string Description { get; set; }
+        public string Variables { get; set; }
+        public string Expected { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-#region License
+﻿#region License
 /*
 Copyright © 2014-2021 European Support Limited
 
@@ -16,19 +16,14 @@ limitations under the License.
 */
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GingerCore.ALM.JIRA.Data_Contracts
+namespace GingerCore.ALM.Octane
 {
-   internal class TestRunData
+    public class OctaneSettings
     {
-        public string TestExecutionId { get; set; }
-        public string TestCaseRunId { get; set; }
-        public string TestSetId { get; set; }
+        public string CertificateFilePath { get; set; }
 
+        public string CertificatePassword { get; set; }
+
+        public bool IsCertificatePasswordEncrypted { get; set; } = false;
     }
 }

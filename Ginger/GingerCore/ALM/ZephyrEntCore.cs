@@ -322,5 +322,12 @@ namespace GingerCore.ALM
         {
             zephyrEntExportManager.ExecuteTestCases(assignsList, testerId, ActivitiesGroups);
         }
+        public override GingerCoreNET.ALMLib.ALMIntegration.eALMType ALMType
+        {
+            get
+            {
+                return GingerCoreNET.ALMLib.ALMIntegration.eALMType.ZephyrEnterprise;
+            }
+        }
     }
 }

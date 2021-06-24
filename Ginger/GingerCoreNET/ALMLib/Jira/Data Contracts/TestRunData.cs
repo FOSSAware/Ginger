@@ -1,4 +1,4 @@
-#region License
+﻿#region License
 /*
 Copyright © 2014-2021 European Support Limited
 
@@ -16,15 +16,19 @@ limitations under the License.
 */
 #endregion
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace GingerCore.ALM.JIRA
+namespace GingerCore.ALM.JIRA.Data_Contracts
 {
-    public class JiraTestStep
+    internal class TestRunData
     {
-        public string StepID { get; set; }
-        public string StepName { get; set; }
-        public string Description { get; set; }
-        public string Variables { get; set; }
-        public string Expected { get; set; }
+        public string TestExecutionId { get; set; }
+        public string TestCaseRunId { get; set; }
+        public string TestSetId { get; set; }
+
     }
 }

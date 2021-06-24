@@ -162,7 +162,7 @@ namespace GingerCore.ALM
             return exportMananger.ExportBfToAlm(businessFlow, testCaseFields, testSetFields, testExecutionFields, ref responseStr);
         }
 
-        public bool ExportBfToZephyr(   BusinessFlow businessFlow, IEnumerable<ExternalItemFieldBase> testCaseFields,
+        public bool ExportBfToZephyr(BusinessFlow businessFlow, IEnumerable<ExternalItemFieldBase> testCaseFields,
                                         IEnumerable<ExternalItemFieldBase> testSetFields, IEnumerable<ExternalItemFieldBase> testExecutionFields,
                                         ref string responseStr, string versionId, string cycleId)
         {
@@ -245,7 +245,7 @@ namespace GingerCore.ALM
         {
             bool containJiraSettingsFile = false;
 
-           
+
             using (FileStream configPackageZipFile = new FileStream(PackageFileName, FileMode.Open))
             {
                 using (ZipArchive zipArchive = new ZipArchive(configPackageZipFile))
@@ -274,6 +274,13 @@ namespace GingerCore.ALM
                 Reporter.ToLog(eLogLevel.WARN, "Jira Configuration package not exist in solution, Jira Settings not exist at: " + Path.Combine(CurrJiraConfigPath, "JiraSettings"));
             }
             return false;
+        }
+        public override GingerCoreNET.ALMLib.ALMIntegration.eALMType ALMType
+        {
+            get
+            {
+                return GingerCoreNET.ALMLib.ALMIntegration.eALMType.Jira;
+            }
         }
     }
 }

@@ -90,5 +90,6 @@ namespace Amdocs.Ginger.Common
 
 
         DbConnection GetOracleConnection(string ConnectionString);
+
     }
 }

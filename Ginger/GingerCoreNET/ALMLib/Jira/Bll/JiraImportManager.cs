@@ -16,27 +16,20 @@ limitations under the License.
 */
 #endregion
 
-using ALM_Common.Abstractions;
 using ALM_Common.DataContracts;
 using Amdocs.Ginger.Common;
 using Amdocs.Ginger.Repository;
 using GingerCore.Activities;
-using GingerCore.External;
 using GingerCore.Variables;
-using Newtonsoft.Json;
-using ALM_Common.Data_Contracts;
+using GingerCoreNET.SolutionRepositoryLib.RepositoryObjectsLib.PlatformsLib;
+using JiraRepository.Data_Contracts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Web;
-using JiraRepository;
-using JiraRepository.Data_Contracts;
-using GingerCoreNET.SolutionRepositoryLib.RepositoryObjectsLib.PlatformsLib;
 
 namespace GingerCore.ALM.JIRA
 {
@@ -154,7 +147,7 @@ namespace GingerCore.ALM.JIRA
                         if (toAddStepActivity)
                         {
                             //not in group- need to add it
-                            busFlow.AddActivity(stepActivity, tcActivsGroup);                            
+                            busFlow.AddActivity(stepActivity, tcActivsGroup);
                         }
 
                         //pull TC-Step parameters and add them to the Activity level
@@ -615,7 +608,7 @@ namespace GingerCore.ALM.JIRA
                 tcActivsGroup.ExternalID2 = tc.Labels;
                 busFlow.AddActivitiesGroup(tcActivsGroup);
                 busFlow.ImportActivitiesGroupActivitiesFromRepository(tcActivsGroup, GingerActivitiesRepo, ApplicationPlatforms, true);
-              
+
                 busFlow.AttachActivitiesGroupsAndActivities();
             }
             else //TC not exist in Ginger repository so create new one
@@ -800,7 +793,7 @@ namespace GingerCore.ALM.JIRA
                                             {
                                                 stepDescription[1] = stepAnonymous.data;
                                             }
-                                            test.Steps.Add(new JiraTestStep() { StepID = stepAnonymous.id.ToString(), StepName = stepAnonymous.step, Description = StripHTML(stepDescription[1]) , Variables = stepVariables[1]});
+                                            test.Steps.Add(new JiraTestStep() { StepID = stepAnonymous.id.ToString(), StepName = stepAnonymous.step, Description = StripHTML(stepDescription[1]), Variables = stepVariables[1] });
                                         }
                                         break;
                                 }
@@ -983,7 +976,7 @@ namespace GingerCore.ALM.JIRA
                     if (toAddStepActivity)
                     {
                         //not in group- need to add it
-                        busFlow.AddActivity(stepActivity, tcActivsGroup, startGroupActsIndxInBf++);                        
+                        busFlow.AddActivity(stepActivity, tcActivsGroup, startGroupActsIndxInBf++);
                     }
 
                     //pull TC-Step parameters and add them to the Activity level
@@ -1174,16 +1167,16 @@ namespace GingerCore.ALM.JIRA
             busFlow.Description = testSet.Description;
             UpdateBFSelectedAG(ref busFlow, activitiesGroupToUpdatedData);
         }
-        public Dictionary<string,JiraTest> GetJiraSelectedTestsData(string testSetID, List<string> TCsIds = null)
+        public Dictionary<string, JiraTest> GetJiraSelectedTestsData(string testSetID, List<string> TCsIds = null)
         {
-            Dictionary<string,JiraTest> existsTestInJira = new Dictionary<string, JiraTest>();
+            Dictionary<string, JiraTest> existsTestInJira = new Dictionary<string, JiraTest>();
 
             JiraTestSet testSet = GetTestSetData(new JiraTestSet { Key = testSetID });
             if (testSet != null && testSet.Tests.Count > 0)
             {
-                foreach(string tc in TCsIds)
+                foreach (string tc in TCsIds)
                 {
-                    existsTestInJira.Add(tc,testSet.Tests.Where(tst => tst.TestKey.Equals(tc)).FirstOrDefault());
+                    existsTestInJira.Add(tc, testSet.Tests.Where(tst => tst.TestKey.Equals(tc)).FirstOrDefault());
                 }
             }
 
