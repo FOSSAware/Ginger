@@ -24,6 +24,8 @@ using GingerCore.Activities;
 using GingerCore.ALM.Octane;
 using GingerCore.ALM.QC;
 using GingerCore.Variables;
+using GingerCoreCommon.ALM.QC;
+using GingerCoreNET.ALMLib.DataContract;
 using GingerCoreNET.SolutionRepositoryLib.RepositoryObjectsLib.PlatformsLib;
 using Octane_Repository;
 using OctaneSdkStandard.Connector;
@@ -36,7 +38,6 @@ using OctaneSdkStandard.Entities.WorkItems;
 using OctaneSdkStandard.Services;
 using OctaneSdkStandard.Services.Queries;
 using OctaneSdkStandard.Services.RequestContext;
-using QCRestClient;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -47,7 +48,6 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
-using QCTestSet = QCRestClient.QCTestSet;
 
 namespace GingerCore.ALM
 {

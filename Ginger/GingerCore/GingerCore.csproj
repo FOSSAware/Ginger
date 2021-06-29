@@ -334,7 +334,6 @@
     <Compile Include="ALM\QCCore.cs" />
     <Compile Include="ALM\QC\ImportFromQC.cs" />
     <Compile Include="ALM\QC\QCConnect.cs" />
-    <Compile Include="ALM\QC\QCTestSet.cs" />
     <Compile Include="ALM\QC\QCTSTest.cs" />
     <Compile Include="ALM\QC\QCTSTestParameter.cs" />
     <Compile Include="ALM\QC\QCTSTestRun.cs" />

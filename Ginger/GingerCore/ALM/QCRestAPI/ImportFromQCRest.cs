@@ -20,6 +20,7 @@ using Amdocs.Ginger.Common;
 using Amdocs.Ginger.Common.InterfacesLib;
 using Amdocs.Ginger.Repository;
 using GingerCore.Activities;
+using GingerCore.ALM.QC;
 using GingerCore.Variables;
 using GingerCoreNET.SolutionRepositoryLib.RepositoryObjectsLib.PlatformsLib;
 using QCRestClient;
@@ -200,7 +201,7 @@ namespace GingerCore.ALM.QCRestAPI
                 Dictionary<string, string> busVariables = new Dictionary<string, string>();//will store linked variables
 
                 //Create Activities Group + Activities for each TC
-                foreach (QC.QCTSTest tc in testSet.Tests)
+                foreach (QCTSTest tc in testSet.Tests)
                 {
                     //check if the TC is already exist in repository
                     ActivitiesGroup tcActivsGroup;
