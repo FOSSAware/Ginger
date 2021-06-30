@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 using TDAPIOLELib;
+using GingerCoreNET.ALMLib.DataContract;
 
 namespace GingerCore.ALM.QC
 {

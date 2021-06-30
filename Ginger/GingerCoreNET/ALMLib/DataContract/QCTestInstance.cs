@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
-namespace GingerCoreCommon.ALM.QC
+namespace GingerCoreNET.ALMLib.DataContract
 {
     public class QCTestInstance
     {

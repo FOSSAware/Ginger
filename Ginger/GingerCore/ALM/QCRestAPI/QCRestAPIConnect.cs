@@ -20,6 +20,7 @@ using ALM_Common.DataContracts;
 using ALMRestClient;
 using Amdocs.Ginger.Common;
 using GingerCore.ALM.QC;
+using GingerCoreNET.ALMLib.DataContract;
 using QCRestClient;
 using System;
 using System.Collections.Generic;

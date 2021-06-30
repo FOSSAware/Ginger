@@ -18,7 +18,7 @@ limitations under the License.
 
 using System.Collections.Generic;
 
-namespace GingerCore.ALM.QC
+namespace GingerCoreNET.ALMLib.DataContract
 {
     public class QCTSTest
     {

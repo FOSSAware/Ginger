@@ -41,7 +41,7 @@ namespace GingerCore.ALM.QCRestAPI
         public static ObservableList<ApplicationPlatform> ApplicationPlatforms { get; set; }
 
         #region Public Functions
-        public static QCTestInstanceColl ImportTestSetInstanceData(QCTestSet TS)
+        public static QCTestInstanceColl ImportTestSetInstanceData(GingerCoreNET.ALMLib.DataContract.QCTestSet TS)
         {
             return QCRestAPIConnect.GetTestInstancesOfTestSet(TS.Id);
         }

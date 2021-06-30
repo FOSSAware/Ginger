@@ -17,7 +17,7 @@ limitations under the License.
 #endregion
 
 
-namespace GingerCore.ALM.QC
+namespace GingerCoreNET.ALMLib.DataContract
 {
     public class QCTSTestParameter
     {

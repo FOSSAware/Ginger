@@ -16,6 +16,7 @@ limitations under the License.
 */
 #endregion
 
+using GingerCoreNET.ALMLib.DataContract;
 using System.Collections.Generic;
 namespace GingerCore.ALM.QC
 {

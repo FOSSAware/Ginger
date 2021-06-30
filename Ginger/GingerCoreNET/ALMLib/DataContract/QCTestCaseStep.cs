@@ -7,7 +7,7 @@ Copyright © Property of Amdocs Quality Engineering
 using System.Collections.Generic;
 using System.Xml.Linq;
 
-namespace GingerCoreCommon.ALM.QC
+namespace GingerCoreNET.ALMLib.DataContract
 {
     public class QCTestCaseStep
     {

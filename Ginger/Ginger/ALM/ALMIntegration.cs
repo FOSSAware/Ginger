@@ -30,6 +30,7 @@ using System.Reflection;
 using Amdocs.Ginger.Repository;
 using GingerCore.ALM.QC;
 using amdocs.ginger.GingerCoreNET;
+using GingerCoreNET.ALMLib.DataContract;
 
 namespace Ginger.ALM
 {
