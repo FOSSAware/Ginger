@@ -352,8 +352,9 @@ namespace GingerCore.SourceControl
                 System.IO.Directory.CreateDirectory(Path);
             try
             {
+          
                 var co = new CloneOptions();
-                co.BranchName = SourceControlBranch;
+                co.BranchName = string.IsNullOrEmpty(SourceControlBranch) ? "master" : SourceControlBranch;
                 co.CredentialsProvider = GetSourceCredentialsHandler();
                 RepositoryRootFolder = LibGit2Sharp.Repository.Clone(URI, Path, co);
             }

@@ -37,16 +37,7 @@ namespace Amdocs.Ginger.GingerConsole.ReporterLib
                 // TODO: !!!!!!!!!!!!!!!!!!!!!!
                 // show buttons [Ok] - O
                 // Y, N, C
-            // }
-            Console.WriteLine(txt);
-            if (Console.IsInputRedirected)
-            {
-                Console.Read();
-            }
-            else
-            {
-                Console.ReadKey();
-            }
+           
             return defualtResualt; // TEMP !!!!!!!!!            
         }
 
