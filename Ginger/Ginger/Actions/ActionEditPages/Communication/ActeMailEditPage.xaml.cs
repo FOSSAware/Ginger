@@ -91,11 +91,9 @@ namespace Ginger.Actions.Communication
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new System.Windows.Forms.OpenFileDialog();          
-            System.Windows.Forms.DialogResult result = dlg.ShowDialog();
-            if (result == System.Windows.Forms.DialogResult.OK)
+            if (General.SetupBrowseFile(new System.Windows.Forms.OpenFileDialog()) is string fileName)
             {
-                mAct.AttachmentFileName = dlg.FileName;
+                AttachmentFilename.Text = fileName;
             }
         }
         //update screen on select of Outlook Radio Button
