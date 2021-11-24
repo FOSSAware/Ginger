@@ -23,7 +23,7 @@
     "@angular/platform-server": "6.1.10",
     "@angular/router": "6.1.10",
     "@nguniversal/module-map-ngfactory-loader": "6.0.0",
-    "core-js": "^2.5.4",
+    "core-js": "^2.6.12",
     "rxjs": "^6.0.0",
     "zone.js": "^0.8.26",
     "aspnet-prerendering": "^3.0.1",
