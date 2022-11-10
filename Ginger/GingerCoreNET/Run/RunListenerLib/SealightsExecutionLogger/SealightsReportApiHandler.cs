@@ -21,6 +21,7 @@ using amdocs.ginger.GingerCoreNET;
 using Amdocs.Ginger.Common;
 using Amdocs.Ginger.CoreNET.LiteDBFolder;
 using AutoMapper;
+using Ginger.Run;
 using Newtonsoft.Json;
 using RestSharp;
 using System;
@@ -41,6 +42,7 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.SealightsExecutionLogger
         private string EndPointUrl { get; set; }
         public string TestSessionId;
         private string Token = string.Empty;
+        private string[] testsToExclude;
 
         RestClient restClient;
         private const string SEND_CREATEION_TEST_SESSION = "sl-api/v1/test-sessions";
@@ -56,8 +58,11 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.SealightsExecutionLogger
             mVE.Value = EndPointUrl;  // Calculate the value Expression
             EndPointUrl = mVE.ValueCalculated;
 
-            restClient = new RestClient(EndPointUrl);
-            restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;            
+            if(!String.IsNullOrEmpty(EndPointUrl))
+            {
+                restClient = new RestClient(EndPointUrl);
+                restClient.Options.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            }       
         }
            
         public void SendCreationTestSessionToSealightsAsync()
@@ -67,7 +72,7 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.SealightsExecutionLogger
                 Reporter.ToLog(eLogLevel.INFO, string.Format("Starting execution data to Sealights"));
 
                 string message = string.Format("execution data to Sealights");
-                bool responseIsSuccess = SendRestRequestCreateSession(SEND_CREATEION_TEST_SESSION, Method.POST);
+                bool responseIsSuccess = SendRestRequestCreateSession(SEND_CREATEION_TEST_SESSION, Method.Post);
                 if (responseIsSuccess)
                 {
                     Reporter.ToLog(eLogLevel.INFO, "Successfully sent " + message);
@@ -83,14 +88,14 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.SealightsExecutionLogger
             }
         }
 
-        public async Task SendingTestEventsToSealightsAsync(string name, DateTime startTime, DateTime endTime, string status)
+        public async Task SendingTestEventsToSealightsAsync(string name, Guid externalId, DateTime startTime, DateTime endTime, string status)
         {
             if (restClient != null)
-            {                
+            {
                 Reporter.ToLog(eLogLevel.INFO, string.Format("Starting to Send Test Events to Sealights"));
 
                 string message = string.Format("Sending Test Events to Sealights");
-                bool responseIsSuccess = await SendRestRequestTestEvents(SEND_CREATEION_TEST_SESSION, Method.POST, name, startTime, endTime, status).ConfigureAwait(false);
+                bool responseIsSuccess = await SendRestRequestTestEvents(SEND_CREATEION_TEST_SESSION, Method.Post, name, externalId, startTime, endTime, status).ConfigureAwait(false);
                 if (responseIsSuccess)
                 {
                     Reporter.ToLog(eLogLevel.INFO, "Successfully sent " + message);
@@ -113,7 +118,7 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.SealightsExecutionLogger
                 Reporter.ToLog(eLogLevel.INFO, string.Format("Starting sealights delete session"));
 
                 string message = string.Format("execution data to Sealights");
-                bool responseIsSuccess = await SendRestRequestDeleteSession(SEND_CREATEION_TEST_SESSION, Method.DELETE).ConfigureAwait(false);
+                bool responseIsSuccess = await SendRestRequestDeleteSession(SEND_CREATEION_TEST_SESSION, Method.Delete).ConfigureAwait(false);
                 if (responseIsSuccess)
                 {
                     Reporter.ToLog(eLogLevel.INFO, "Successfully sent " + message);
@@ -128,8 +133,6 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.SealightsExecutionLogger
                 Reporter.ToLog(eLogLevel.WARN, "Rest Client is null as endpoint url is not provided");
             }
         }
-
-
 
         private bool SendRestRequestCreateSession(string api, Method apiMethod)
         {
@@ -148,7 +151,7 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.SealightsExecutionLogger
                 string sessionTimeout = WorkSpace.Instance.Solution.SealightsConfiguration.SealightsSessionTimeout;
 
                 // Calculate the value Expression
-                mVE.Value = labId;  
+                mVE.Value = labId;
                 labId = mVE.ValueCalculated;
                 mVE.Value = testStage;
                 testStage = mVE.ValueCalculated;
@@ -158,16 +161,16 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.SealightsExecutionLogger
                 sessionTimeout = mVE.ValueCalculated;
 
                 //  Check Sealights's values on run-set levels
-                if (WorkSpace.Instance.RunsetExecutor.RunSetConfig.SealighsLabId != null)
+                if (WorkSpace.Instance.RunsetExecutor.RunSetConfig.SealightsLabId != null)
                 {
-                    labId = WorkSpace.Instance.RunsetExecutor.RunSetConfig.SealighsLabId;
+                    labId = WorkSpace.Instance.RunsetExecutor.RunSetConfig.SealightsLabId;
 
                     mVE.Value = labId;
                     labId = mVE.ValueCalculated;
                 }
-                if (WorkSpace.Instance.RunsetExecutor.RunSetConfig.SealighsBuildSessionID != null)
+                if (WorkSpace.Instance.RunsetExecutor.RunSetConfig.SealightsBuildSessionID != null)
                 {
-                    bsId = WorkSpace.Instance.RunsetExecutor.RunSetConfig.SealighsBuildSessionID;
+                    bsId = WorkSpace.Instance.RunsetExecutor.RunSetConfig.SealightsBuildSessionID;
 
                     mVE.Value = bsId;
                     bsId = mVE.ValueCalculated;
@@ -193,11 +196,11 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.SealightsExecutionLogger
 
                 restRequest.AddJsonBody(new { labId = labId, testStage = testStage, bsId = bsId, sessionTimeout = sessionTimeout }); // Anonymous type object is converted to Json body
 
-                IRestResponse response = restClient.Execute(restRequest);
+                RestResponse response = restClient.Execute(restRequest);
 
                 dynamic objResponse = JsonConvert.DeserializeObject(response.Content);
-                TestSessionId = objResponse.data.testSessionId.ToString(); 
-                
+                TestSessionId = objResponse.data.testSessionId.ToString();
+
                 if (response.IsSuccessful)
                 {
                     Reporter.ToLog(eLogLevel.DEBUG, "Successfully sent " + api);
@@ -217,7 +220,7 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.SealightsExecutionLogger
         }
 
 
-        private async Task<bool> SendRestRequestTestEvents(string api, Method apiMethod, string name, DateTime startTime, DateTime endTime, string status)
+        private async Task<bool> SendRestRequestTestEvents(string api, Method apiMethod, string name, Guid externalId, DateTime startTime, DateTime endTime, string status)
         {
             try
             {
@@ -230,10 +233,10 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.SealightsExecutionLogger
 
                 long unixStartTime = new DateTimeOffset(startTime).ToUnixTimeMilliseconds();
                 long unixEndTime = new DateTimeOffset(endTime).ToUnixTimeMilliseconds();
-                             
-                restRequest.AddJsonBody( new[] { new { name = name, start = unixStartTime, end = unixEndTime, status = status } } ); // Anonymous type object is converted to Json body
 
-                IRestResponse response = await restClient.ExecuteAsync(restRequest);
+                restRequest.AddJsonBody(new[] { new { name = name, externalId = externalId, start = unixStartTime, end = unixEndTime, status = status } }); // Anonymous type object is converted to Json body
+
+                RestResponse response = await restClient.ExecuteAsync(restRequest);
 
                 if (response.IsSuccessful)
                 {
@@ -265,12 +268,73 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.SealightsExecutionLogger
                 restRequest.AddHeader("Content-Type", "application/json");
                 restRequest.AddHeader("Authorization", "Bearer " + Token);
 
-                IRestResponse response = await restClient.ExecuteAsync(restRequest);
+                RestResponse response = await restClient.ExecuteAsync(restRequest);
 
                 if (response.IsSuccessful)
                 {
                     TestSessionId = null;
 
+                    Reporter.ToLog(eLogLevel.DEBUG, "Successfully sent " + api);
+                    return true;
+                }
+                else
+                {
+                    Reporter.ToLog(eLogLevel.ERROR, "Failed to send " + api + "Response: " + response.Content);
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Reporter.ToLog(eLogLevel.ERROR, "Exception when sending " + api, ex);
+                return false;
+            }
+        }
+        public string[] GetTestsToExclude(RunSetConfig runsetConfig)
+        {
+            if (restClient != null)
+            {
+                Reporter.ToLog(eLogLevel.INFO, "Getting a list of tests that should be excluded from Sealights");
+
+                string message = "a list of tests that should be excluded from Sealights";
+                bool responseIsSuccess = SendRestRequestTestsToExclude(SEND_CREATEION_TEST_SESSION, Method.Get);
+                if (responseIsSuccess)
+                {
+                    Reporter.ToLog(eLogLevel.INFO, "Successfully got " + message);
+                }
+                else
+                {
+                    Reporter.ToLog(eLogLevel.ERROR, "Failed to get " + message);
+                }
+                if (testsToExclude != null)
+                {
+                    return testsToExclude;
+                }
+            }
+            else
+            {
+                Reporter.ToLog(eLogLevel.WARN, "Rest Client is null as endpoint URL is not provided");
+            }
+            return null;
+        }
+
+        private bool SendRestRequestTestsToExclude(string api, Method apiMethod)
+        {
+            try
+            {
+                api += "/" + TestSessionId + "/exclude-tests?type=externalId";
+
+                RestRequest restRequest = (RestRequest)new RestRequest(api, apiMethod) { RequestFormat = RestSharp.DataFormat.Json };
+
+                restRequest.AddHeader("Content-Type", "application/json");
+                restRequest.AddHeader("Authorization", "Bearer " + Token);
+
+                RestResponse response = restClient.Execute(restRequest);
+
+                dynamic objResponse = JsonConvert.DeserializeObject(response.Content);
+                testsToExclude = objResponse.data.ToObject<string[]>();
+
+                if (response.IsSuccessful)
+                {
                     Reporter.ToLog(eLogLevel.DEBUG, "Successfully sent " + api);
                     return true;
                 }

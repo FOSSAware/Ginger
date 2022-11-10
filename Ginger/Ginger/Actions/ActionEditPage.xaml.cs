@@ -37,6 +37,7 @@ using Ginger.WindowExplorer;
 using GingerCore;
 using GingerCore.Actions;
 using GingerCore.Actions.Java;
+using GingerCore.Actions.Windows;
 using GingerCore.DataSource;
 using GingerCore.Drivers;
 using GingerCore.GeneralLib;
@@ -118,7 +119,7 @@ namespace Ginger.Actions
             EditMode = editMode;
 
             mAction = act;
-            if (editMode != General.eRIPageViewMode.View && editMode != General.eRIPageViewMode.Explorer)
+            if (editMode != General.eRIPageViewMode.View && editMode != General.eRIPageViewMode.ViewAndExecute && editMode != General.eRIPageViewMode.Explorer)
             {
                 mAction.SaveBackup();
             }
@@ -173,7 +174,7 @@ namespace Ginger.Actions
                 mAction.AddNewReturnParams = true;
             }
 
-            if (EditMode == General.eRIPageViewMode.Automation || EditMode == General.eRIPageViewMode.View || EditMode == General.eRIPageViewMode.Explorer)
+            if (EditMode == General.eRIPageViewMode.Automation || EditMode == General.eRIPageViewMode.View || EditMode == General.eRIPageViewMode.ViewAndExecute || EditMode == General.eRIPageViewMode.Explorer)
             {
                 BindingHandler.ObjFieldBinding(xExecutionStatusTabImage, UcItemExecutionStatus.StatusProperty, mAction, nameof(Act.Status));
             }
@@ -182,7 +183,7 @@ namespace Ginger.Actions
                 xExecutionStatusTabImage.Visibility = Visibility.Collapsed;
             }
 
-            if (EditMode == General.eRIPageViewMode.View)
+            if (EditMode == General.eRIPageViewMode.View || EditMode == General.eRIPageViewMode.ViewAndExecute)
             {
                 SetViewMode();
             }
@@ -191,7 +192,7 @@ namespace Ginger.Actions
                 SetExplorerMode();
             }
 
-            if ((EditMode == General.eRIPageViewMode.Automation || EditMode == General.eRIPageViewMode.View) &&
+            if ((EditMode == General.eRIPageViewMode.Automation || EditMode == General.eRIPageViewMode.View || EditMode == General.eRIPageViewMode.ViewAndExecute) &&
                        (mAction.Status != null && mAction.Status != Amdocs.Ginger.CoreNET.Execution.eRunStatus.Pending))
             {
                 xActionTabs.SelectedItem = xExecutionReportTab;
@@ -284,6 +285,10 @@ namespace Ginger.Actions
             {
                 mAFCP = new ActionFlowControlPage(mAction, mActParentBusinessFlow, mActParentActivity, General.eRIPageViewMode.View);
             }
+            if (EditMode == General.eRIPageViewMode.ViewAndExecute)
+            {
+                mAFCP = new ActionFlowControlPage(mAction, mActParentBusinessFlow, mActParentActivity, General.eRIPageViewMode.ViewAndExecute);
+            }
             else if (EditMode == General.eRIPageViewMode.SharedReposiotry)
             {
                 mAFCP = new ActionFlowControlPage(mAction, mActParentBusinessFlow, mActParentActivity, General.eRIPageViewMode.SharedReposiotry);
@@ -346,7 +351,7 @@ namespace Ginger.Actions
                 xOutputValuesExpander.IsExpanded = true;
             }
 
-            if (EditMode == General.eRIPageViewMode.View)
+            if (EditMode == General.eRIPageViewMode.View || EditMode == General.eRIPageViewMode.ViewAndExecute)
             {
                 xOutputValuesGrid.DisableGridColoumns();
             }
@@ -365,7 +370,7 @@ namespace Ginger.Actions
             InitActionLog();
 
             //execution details section
-            if (EditMode == General.eRIPageViewMode.Automation || EditMode == General.eRIPageViewMode.View || EditMode == General.eRIPageViewMode.Explorer)
+            if (EditMode == General.eRIPageViewMode.Automation || EditMode == General.eRIPageViewMode.View || EditMode == General.eRIPageViewMode.ViewAndExecute || EditMode == General.eRIPageViewMode.Explorer)
             {
                 BindingHandler.ObjFieldBinding(xExecutionStatusImage, UcItemExecutionStatus.StatusProperty, mAction, nameof(Act.Status));
                 BindingHandler.ObjFieldBinding(xExecutionStatusLabel, UcItemExecutionStatus.StatusProperty, mAction, nameof(Act.Status));
@@ -387,6 +392,12 @@ namespace Ginger.Actions
                 {
                     BindingHandler.ObjFieldBinding(xTakeScreenShotCheckBox, CheckBox.IsCheckedProperty, mAction, nameof(Act.TakeScreenShot));
                     xWindowsToCaptureCombo.BindControl(mAction, nameof(Act.WindowsToCapture));
+                    //remove full page for other platforms excepts web
+                    if (mAction.Platform != GingerCoreNET.SolutionRepositoryLib.RepositoryObjectsLib.PlatformsLib.ePlatformType.Web)
+                    {
+                        var comboEnumItem = xWindowsToCaptureCombo.Items.Cast<ComboEnumItem>().Where(x => x.Value.ToString() == Act.eWindowsToCapture.FullPage.ToString()).FirstOrDefault();
+                        xWindowsToCaptureCombo.Items.Remove(comboEnumItem);
+                    }
                     SetScreenshotsPnlView();
                     UpdateScreenShots();
                 }
@@ -498,14 +509,16 @@ namespace Ginger.Actions
             int minimumInputValuesToHideGrid = 1;
             if (mAction.ObjectLocatorConfigsNeeded)
             {
-                //For actions with locator config needed, Locate by , locate value is also added to input value                
+                //For actions with locator's config needed, Locate by , locate value is also added to input value                
                 minimumInputValuesToHideGrid = 3;
             }
 
             if (a.GetType() != typeof(ActDBValidation) && a.GetType() != typeof(ActTableElement) &&
                 a.GetType() != typeof(ActLaunchJavaWSApplication) && a.GetType() != typeof(ActJavaEXE) &&
                 a.GetType() != typeof(ActGenElement) && a.GetType() != typeof(ActScript) && a.GetType() != typeof(ActConsoleCommand) &&
-                a.GetType() != typeof(ActSetVariableValue) && a.GetType() != typeof(ActCreatePDFChart) && a.GetType() != typeof(ActCompareImgs) && a.GetType() != typeof(ActGenerateFileFromTemplate))
+                a.GetType() != typeof(ActSetVariableValue) && a.GetType() != typeof(ActCreatePDFChart) && a.GetType() != typeof(ActCompareImgs) &&
+                a.GetType() != typeof(ActGenerateFileFromTemplate) && a.GetType() != typeof(ActPBControl) && a.GetType() != typeof(ActWindowsControl) &&
+                a.GetType() != typeof(ActMenuItem) && a.GetType() != typeof(ActJavaElement))
             {
                 if (a.InputValues.Count > minimumInputValuesToHideGrid)
                 {
@@ -615,7 +628,10 @@ namespace Ginger.Actions
                     xValueBoxPnl.Visibility = Visibility.Collapsed;
                 }
             }
-            else if (a.GetType() == typeof(ActSetVariableValue) || a.GetType() == typeof(ActCreatePDFChart) || a.GetType() == typeof(ActCompareImgs) || a.GetType() == typeof(ActGenerateFileFromTemplate))
+            else if (a.GetType() == typeof(ActSetVariableValue) || a.GetType() == typeof(ActCreatePDFChart) 
+                        || a.GetType() == typeof(ActCompareImgs) || a.GetType() == typeof(ActGenerateFileFromTemplate)
+                        || a.GetType() == typeof(ActPBControl) || a.GetType() == typeof(ActWindowsControl) 
+                        || a.GetType() == typeof(ActMenuItem) || a.GetType() == typeof(ActJavaElement))
             {
                 xInputValuesGrid.Visibility = Visibility.Collapsed;
                 xValueBoxPnl.Visibility = Visibility.Visible;
@@ -726,7 +742,7 @@ namespace Ginger.Actions
             xOutputValuesGrid.btnAdd.AddHandler(Button.ClickEvent, new RoutedEventHandler(AddReturnValue));
             xOutputValuesGrid.AddSeparator();
 
-            xOutputValuesGrid.AddToolbarTool(eImageType.Reset, "Clear Un-used Parameters", new RoutedEventHandler(ClearUnusedParameter), imageSize: 14);
+            xOutputValuesGrid.AddToolbarTool(eImageType.Reset, "Clear Unused Parameters", new RoutedEventHandler(ClearUnusedParameter), imageSize: 14);
             BindingHandler.ObjFieldBinding(xOutputValuesGrid.AddCheckBox("Add Parameters Automatically", null), CheckBox.IsCheckedProperty, mAction, nameof(Act.AddNewReturnParams));
             BindingHandler.ObjFieldBinding(xOutputValuesGrid.AddCheckBox("Support Simulation", new RoutedEventHandler(RefreshOutputColumns)), CheckBox.IsCheckedProperty, mAction, nameof(Act.SupportSimulation));
 
@@ -1067,6 +1083,7 @@ namespace Ginger.Actions
                     break;
 
                 case General.eRIPageViewMode.View:
+                case General.eRIPageViewMode.ViewAndExecute:
                     title = "View " + RemoveActionWord(mAction.ActionDescription) + " Action";
                     winButtons.Add(okBtn);
                     closeHandler = new RoutedEventHandler(okBtn_Click);
@@ -1263,7 +1280,7 @@ namespace Ginger.Actions
 
                 for (int i = 0; i < mAction.ScreenShots.Count; i++)
                 {
-                    //TODO: clean me when Screenshots changed to class instead of list of strings
+                    //TODO: clean me when Screen-shots changed to class instead of list of strings
                     // just in case we don't have name, TOOD: fix all places where we add screen shots to include name
                     string Name = "";
                     if (mAction.ScreenShotsNames.Count > i)

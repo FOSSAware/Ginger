@@ -78,31 +78,34 @@ namespace Ginger.Environments
 
         private async void grdMain_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
         {
-            if (e.Column.Header.ToString() == "User Password")
+            switch(e.Column.DisplayIndex) //we have checked for column index for grid
             {
-                Database selectedEnvDB = (Database)grdAppDbs.CurrentItem;
-                String intialValue = selectedEnvDB.Pass;
-                //if Pass is stored in the form of variable, encryption not required at this stage
-                if (!string.IsNullOrEmpty(intialValue) && !intialValue.Contains("{Var Name"))
-                {
-                    if (!EncryptionHandler.IsStringEncrypted(intialValue))
+                case 8://for Password
+                    Database selectedEnvDB = (Database)grdAppDbs.CurrentItem;
+                    String intialValue = selectedEnvDB.Pass;
+                    //if Pass is stored in the form of variable, encryption not required at this stage
+                    if (!string.IsNullOrEmpty(intialValue) && !intialValue.Contains("{Var Name"))
                     {
-                        selectedEnvDB.Pass = EncryptionHandler.EncryptwithKey(intialValue);
-                        if (string.IsNullOrEmpty(selectedEnvDB.Pass))
+                        if (!EncryptionHandler.IsStringEncrypted(intialValue))
                         {
-                            selectedEnvDB.Pass = null;
+                            selectedEnvDB.Pass = EncryptionHandler.EncryptwithKey(intialValue);
+                            if (string.IsNullOrEmpty(selectedEnvDB.Pass))
+                            {
+                                selectedEnvDB.Pass = null;
+                            }
                         }
                     }
-                }
-            }
+                    break;
+                case 0://for Database name
+                    Database selectedDB = (Database)grdAppDbs.CurrentItem;
+                    if (selectedDB.Name != ((DatabaseOperations)selectedDB.DatabaseOperations).NameBeforeEdit)
+                    {
+                        await UpdateDatabaseNameChange(selectedDB);
+                    }
+                    break;
+                default:
+                    break;
 
-            if (e.Column.Header.ToString() == nameof(Database.Name))
-            {
-                Database selectedDB = (Database)grdAppDbs.CurrentItem;
-                if (selectedDB.Name != ((DatabaseOperations)selectedDB.DatabaseOperations).NameBeforeEdit)
-                {
-                    await UpdateDatabaseNameChange(selectedDB);
-                }
             }
         }
 
@@ -185,9 +188,9 @@ namespace Ginger.Environments
                 {
                     if (Reporter.ToUser(eUserMsgKey.OracleDllIsMissing, AppDomain.CurrentDomain.BaseDirectory) == Amdocs.Ginger.Common.eUserMsgSelection.Yes)
                     {
-                        System.Diagnostics.Process.Start("https://docs.oracle.com/database/121/ODPNT/installODPmd.htm#ODPNT8149");
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo() { FileName = "https://docs.oracle.com/database/121/ODPNT/installODPmd.htm#ODPNT8149", UseShellExecute = true });
                         System.Threading.Thread.Sleep(2000);
-                        System.Diagnostics.Process.Start("http://www.oracle.com/technetwork/topics/dotnet/downloads/odacdeploy-4242173.html");
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo() { FileName = "http://www.oracle.com/technetwork/topics/dotnet/downloads/odacdeploy-4242173.html", UseShellExecute = true });
 
                     }
                     return;

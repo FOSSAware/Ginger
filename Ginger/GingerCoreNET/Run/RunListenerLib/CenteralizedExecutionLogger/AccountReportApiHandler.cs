@@ -50,8 +50,15 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.CenteralizedExecutionLogger
             if (!string.IsNullOrEmpty(apiUrl))
             {
                 EndPointUrl = apiUrl;
-                restClient = new RestClient(apiUrl);
-                restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+                try
+                {
+                    restClient = new RestClient(apiUrl);
+                    restClient.Options.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+                }
+                catch (Exception ex)
+                {
+                    Reporter.ToLog(eLogLevel.ERROR, "Centralized DB endpoint url is Invalid");
+                } 
             }
         }
         public AccountReportApiHandler()
@@ -159,7 +166,7 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.CenteralizedExecutionLogger
         {
             if (restClient != null)
             {
-                RestRequest restRequest = (RestRequest)new RestRequest(SEND_ACTIVITYGROUP_EXECUTION_DATA, isUpdate ? Method.PUT : Method.POST) { RequestFormat = RestSharp.DataFormat.Json }.AddJsonBody(accountReportActivityGroup);
+                RestRequest restRequest = (RestRequest)new RestRequest(SEND_ACTIVITYGROUP_EXECUTION_DATA, isUpdate ? Method.Put : Method.Post) { RequestFormat = RestSharp.DataFormat.Json }.AddJsonBody(accountReportActivityGroup);
                 string message = string.Format("execution data to Central DB for the Activities Group:'{0}' (Execution Id:'{1}', Parent Execution Id:'{2}')", accountReportActivityGroup.Name, accountReportActivityGroup.Id, accountReportActivityGroup.AccountReportDbBusinessFlowId);
                 try
                 {
@@ -232,11 +239,11 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.CenteralizedExecutionLogger
         {
             if (restClient != null)
             {
-                RestRequest restRequest = (RestRequest)new RestRequest(EXECUTION_ID_VALIDATION + executionId, Method.GET);
+                RestRequest restRequest = (RestRequest)new RestRequest(EXECUTION_ID_VALIDATION + executionId, Method.Get);
                 string message = string.Format("execution id : {0}", executionId);
                 try
                 {
-                    IRestResponse response = restClient.Execute(restRequest);
+                    RestResponse response = restClient.Execute(restRequest);
                     if (response.IsSuccessful)
                     {
                         Reporter.ToLog(eLogLevel.DEBUG, "Successfully validated execution id " + message);
@@ -304,7 +311,7 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.CenteralizedExecutionLogger
                 string message = string.Format("screenshot/s to Central DB for Execution Id:'{0}'", executionId);
                 try
                 {
-                    RestRequest restRequest = new RestRequest(UPLOAD_FILES, Method.POST);
+                    RestRequest restRequest = new RestRequest(UPLOAD_FILES, Method.Post);
                     restRequest.AddHeader("Content-Type", "multipart/form-data");
                     restRequest.AddHeader("ExecutionId", executionId.ToString());
 
@@ -312,7 +319,7 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.CenteralizedExecutionLogger
                     {
                         restRequest.AddFile(Path.GetFileName(item), item);
                     }
-                    IRestResponse response = await restClient.ExecuteAsync(restRequest);
+                    RestResponse response = await restClient.ExecuteAsync(restRequest);
 
                     if (response.IsSuccessful)
                     {
@@ -335,9 +342,9 @@ namespace Amdocs.Ginger.CoreNET.Run.RunListenerLib.CenteralizedExecutionLogger
         {
             try
             {
-                Method method = isUpdate ? Method.PUT : Method.POST;
+                Method method = isUpdate ? Method.Put : Method.Post;
                 RestRequest restRequest = (RestRequest)new RestRequest(api, method) { RequestFormat = RestSharp.DataFormat.Json }.AddJsonBody(accountReport);
-                IRestResponse response = await restClient.ExecuteAsync(restRequest);
+                RestResponse response = await restClient.ExecuteAsync(restRequest);
                 if (response.IsSuccessful)
                 {
                     Reporter.ToLog(eLogLevel.DEBUG, "Successfully sent " + api);

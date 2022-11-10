@@ -48,7 +48,8 @@ namespace Ginger.Repository
         RoutedEventHandler mAddActivityHandler;
         Context mContext;
         GenericWindow _pageGenericWin = null;
-
+        ObservableList<Activity> mActivities;
+        bool mAddPOMActivity = false;
         public enum ePageViewMode { Default, Selection }
 
         public enum eActivityType 
@@ -88,16 +89,40 @@ namespace Ginger.Repository
             SetActivitiesRepositoryListView();            
             SetGridAndTreeData();
         }
+        public ActivitiesRepositoryPage(ObservableList<Activity> activities, Context context, bool AddPOMActivity = false)
+        {
+            InitializeComponent();
 
+            mActivities = activities;
+            mContext = context;
+            mAddPOMActivity = AddPOMActivity;
+            SetActivitiesRepositoryListView();
+            SetGridAndTreeData();
+        }
         private void SetGridAndTreeData()
         {
             xActivitiesRepositoryListView.ListTitleVisibility = Visibility.Hidden;
-            ActivitiesListViewHelper mActionsListHelper = new ActivitiesListViewHelper(mContext, General.eRIPageViewMode.AddFromShardRepository);
-
+            ActivitiesListViewHelper mActionsListHelper = null;
+            if (mAddPOMActivity)
+            {
+                mActionsListHelper = new ActivitiesListViewHelper(mContext, General.eRIPageViewMode.AddFromModel);
+            }
+            else if (mActivities != null)
+            {
+                mActionsListHelper = new ActivitiesListViewHelper(mContext, General.eRIPageViewMode.Explorer);
+            }
+            else
+            {
+                mActionsListHelper = new ActivitiesListViewHelper(mContext, General.eRIPageViewMode.AddFromShardRepository);
+            }
             xActivitiesRepositoryListView.SetDefaultListDataTemplate(mActionsListHelper);
             xActivitiesRepositoryListView.ListSelectionMode = SelectionMode.Extended;
             mActionsListHelper.ListView = xActivitiesRepositoryListView;
-
+            if (mActivities != null)//to show pom specific activities
+            {
+                xActivitiesRepositoryListView.DataSourceList = mActivities;
+                return;
+            }
             if (mActivitiesFolder.IsRootFolder)
             {
                 xActivitiesRepositoryListView.DataSourceList = WorkSpace.Instance.SolutionRepository.GetAllRepositoryItems<Activity>();
@@ -159,9 +184,17 @@ namespace Ginger.Repository
         {
             if (xActivitiesRepositoryListView.CurrentItem != null)
             {
-                Activity a = (Activity)xActivitiesRepositoryListView.CurrentItem;
-                GingerWPF.BusinessFlowsLib.ActivityPage w = new GingerWPF.BusinessFlowsLib.ActivityPage(a, new Context() { Activity = a }, General.eRIPageViewMode.SharedReposiotry);
-                w.ShowAsWindow();
+                Activity activity = (Activity)xActivitiesRepositoryListView.CurrentItem;
+                GingerWPF.BusinessFlowsLib.ActivityPage window = null;
+                if (activity.IsAutoLearned)
+                {
+                    window = new GingerWPF.BusinessFlowsLib.ActivityPage(activity, new Context() { Activity = activity }, General.eRIPageViewMode.View);
+                }
+                else
+                {
+                    window = new GingerWPF.BusinessFlowsLib.ActivityPage(activity, new Context() { Activity = activity }, General.eRIPageViewMode.SharedReposiotry);
+                }
+                window.ShowAsWindow();
             }
             else
             {

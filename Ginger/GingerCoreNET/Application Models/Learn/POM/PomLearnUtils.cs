@@ -18,6 +18,7 @@ limitations under the License.
 
 using amdocs.ginger.GingerCoreNET;
 using Amdocs.Ginger.Common;
+using Amdocs.Ginger.Common.Repository.ApplicationModelLib.POMModelLib;
 using Amdocs.Ginger.Common.UIElement;
 using Amdocs.Ginger.Repository;
 using GingerCore;
@@ -54,6 +55,19 @@ namespace Amdocs.Ginger.CoreNET.Application_Models
             set
             {
                 mLearnOnlyMappedElements = value;
+            }
+        }
+
+        bool mLearnScreenshotsOfElements = true;
+        public bool LearnScreenshotsOfElements
+        {
+            get
+            {
+                return mLearnScreenshotsOfElements;
+            }
+            set
+            {
+                mLearnScreenshotsOfElements = value;
             }
         }
 
@@ -157,7 +171,7 @@ namespace Amdocs.Ginger.CoreNET.Application_Models
         public void LearnScreenShot()
         {
             IWindowExplorerDriver.UnHighLightElements();
-            ScreenShot = ((IVisualTestingDriver)((AgentOperations)Agent.AgentOperations).Driver).GetScreenShot(new Tuple<int, int>(ApplicationPOMModel.cLearnScreenWidth, ApplicationPOMModel.cLearnScreenHeight));
+            ScreenShot = ((IVisualTestingDriver)((AgentOperations)Agent.AgentOperations).Driver).GetScreenShot(null, true);
         }
 
         public async Task Learn()
@@ -186,13 +200,14 @@ namespace Amdocs.Ginger.CoreNET.Application_Models
             {
                 if (SelectedElementTypesList.Count > 0)
                 {
-                    await IWindowExplorerDriver.GetVisibleControls(SelectedElementTypesList, mElementsList,true, SpecificFramePath,GetRelativeXpathTemplateList());
+                    await IWindowExplorerDriver.GetVisibleControls(SelectedElementTypesList, mElementsList,true, SpecificFramePath,GetRelativeXpathTemplateList(), LearnScreenshotsOfElements, POM.ApplicationPOMMetaData);
                 }
             }
             else
             {
-               await IWindowExplorerDriver.GetVisibleControls(null, mElementsList,true, SpecificFramePath,GetRelativeXpathTemplateList());
+               await IWindowExplorerDriver.GetVisibleControls(null, mElementsList,true, SpecificFramePath,GetRelativeXpathTemplateList(), LearnScreenshotsOfElements, POM.ApplicationPOMMetaData);
             }
+
         }
 
         private List<string> GetRelativeXpathTemplateList()

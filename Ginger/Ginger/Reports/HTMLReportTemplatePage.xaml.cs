@@ -502,7 +502,7 @@ namespace Ginger.Reports
 
         private void SetDefaultLogoImage()
         {
-            imgLogo.Source = new BitmapImage(new Uri("pack://application:,,,/Ginger;component/Images/" + "@amdocs_logo.jpg"));
+            imgLogo.Source = new BitmapImage(new Uri(@"/Images/" + "@amdocs_logo.jpg", UriKind.RelativeOrAbsolute));
         }
 
         public void ShowAsWindow(eWindowShowStyle windowStyle = eWindowShowStyle.Dialog)
@@ -895,7 +895,7 @@ namespace Ginger.Reports
         {
             try
             {
-                string dummyReportOriginalZipFilePath = Assembly.GetExecutingAssembly().Location.Replace("Ginger.exe", "") + @"Reports\GingerExecutionReport\PreviewDummyReport\RunSet.zip";
+                string dummyReportOriginalZipFilePath = System.IO.Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Reports\GingerExecutionReport\PreviewDummyReport\RunSet.zip");
                 if (File.Exists(dummyReportOriginalZipFilePath))
                 {
                     string tempFolder = System.IO.Path.Combine(System.IO.Path.GetTempPath() + "GingerHtmlPreviewReport");

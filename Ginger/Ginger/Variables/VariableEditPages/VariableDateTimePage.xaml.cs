@@ -57,7 +57,7 @@ namespace Ginger.Variables
 
             txtDateFormat.Text = variableDateTime.DateTimeFormat;
 
-            GingerCore.GeneralLib.BindingHandler.ObjFieldBinding(txtDateFormat, TextBox.TextProperty,variableDateTime,nameof(VariableDateTime.DateTimeFormat));
+            GingerCore.GeneralLib.BindingHandler.ObjFieldBinding(txtDateFormat, ComboBox.TextProperty,variableDateTime,nameof(VariableDateTime.DateTimeFormat), System.Windows.Data.BindingMode.TwoWay);
             txtDateFormat.AddValidationRule(new DateTimeFormatValidationRule(variableDateTime));
         }
 
@@ -95,9 +95,9 @@ namespace Ginger.Variables
 
         private void dtpInitialDate_TextChanged(object sender, EventArgs e)
         {
-            if (dtpInitialDate.Value < Convert.ToDateTime(variableDateTime.MinDateTime) || dtpInitialDate.Value > Convert.ToDateTime(variableDateTime.MaxDateTime))
+            if (!variableDateTime.CheckDateTimeWithInRange(dtpInitialDate.Value.ToString()))
             {
-                Reporter.ToLog(eLogLevel.ERROR, $"Input Value is not in range:- Maximum date :[{dpMaxDate.Value}], Minimum Date:[{dtpInitialDate.MinDate}]");
+                Reporter.ToLog(eLogLevel.ERROR, $"Input Value is not in range:- Maximum date :[{variableDateTime.MaxDateTime}], Minimum Date:[{variableDateTime.MinDateTime}]");
                 dtpInitialDate.Focus();
                 return;
             }
@@ -109,22 +109,30 @@ namespace Ginger.Variables
 
         private void UpdateIntialDateTimePicker()
         {
-            dtpInitialDate.CustomFormat = txtDateFormat.Text;
-            dpMinDate.CustomFormat = txtDateFormat.Text;
-            dpMaxDate.CustomFormat = txtDateFormat.Text;
+            if (!String.IsNullOrEmpty(((System.Windows.Controls.ComboBoxItem)txtDateFormat.SelectedValue).Content.ToString()))
+            {
+                dtpInitialDate.CustomFormat = ((System.Windows.Controls.ComboBoxItem)txtDateFormat.SelectedValue).Content.ToString();
+                if (dpMinDate != null || dpMaxDate != null)
+                {
+                    dpMinDate.CustomFormat = ((System.Windows.Controls.ComboBoxItem)txtDateFormat.SelectedValue).Content.ToString();
+                    dpMaxDate.CustomFormat = ((System.Windows.Controls.ComboBoxItem)txtDateFormat.SelectedValue).Content.ToString();
+                }
+            }
+            
         }
 
-        private async void txtDateFormat_TextChanged(object sender, TextChangedEventArgs e)
+        private void txtDateFormat_TextChanged(object sender, SelectionChangedEventArgs e)
         {
             // this inner method checks if user is still typing
-            async Task<bool> UserKeepsTyping()
-            {
-                var txt = txtDateFormat.Text;
-                await Task.Delay(1000);
-                return txt != txtDateFormat.Text;
-            }
-            if (await UserKeepsTyping() || dtpInitialDate.CustomFormat == txtDateFormat.Text) return;
-
+            //async Task<bool> UserKeepsTyping()
+            //{
+            //    var txt = txtDateFormat.Text;
+            //    await Task.Delay(1000);
+            //    return txt != txtDateFormat.Text;
+            //}
+            //if (await UserKeepsTyping() || dtpInitialDate.CustomFormat == txtDateFormat.Text) return;
+            //dtpInitialDate.CustomFormat = txtDateFormat.Text;
+            variableDateTime.DateTimeFormat = txtDateFormat.Text;
             UpdateIntialDateTimePicker();
         }
     }

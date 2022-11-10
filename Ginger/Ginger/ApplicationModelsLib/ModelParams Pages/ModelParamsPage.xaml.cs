@@ -73,7 +73,7 @@ namespace GingerWPF.ApplicationModelsLib.APIModelWizard
 
         private void InitGlobalModelParametersGrid()
         {
-            bool isFieldReadOnly = (mPageViewMode == Ginger.General.eRIPageViewMode.View);
+            bool isFieldReadOnly = (mPageViewMode == Ginger.General.eRIPageViewMode.View || mPageViewMode == Ginger.General.eRIPageViewMode.ViewAndExecute);
 
             GridViewDef view = new GridViewDef(GridViewDef.DefaultViewName);
             view.GridColsView = new ObservableList<GridColView>();
@@ -142,7 +142,7 @@ namespace GingerWPF.ApplicationModelsLib.APIModelWizard
 
         private void InitModelParametersGrid()
         {
-            bool isFieldReadOnly = (mPageViewMode == Ginger.General.eRIPageViewMode.View);
+            bool isFieldReadOnly = (mPageViewMode == Ginger.General.eRIPageViewMode.View || mPageViewMode == Ginger.General.eRIPageViewMode.ViewAndExecute);
 
             GridViewDef view = new GridViewDef(GridViewDef.DefaultViewName);
             view.GridColsView = new ObservableList<GridColView>();
@@ -237,7 +237,7 @@ namespace GingerWPF.ApplicationModelsLib.APIModelWizard
                     ImportOptionalValuesForParameters im = new ImportOptionalValuesForParameters();
                     List<AppParameters> parameters = GetParameterList();
                     string filePath = im.ExportParametersToExcelFile(parameters, string.Format("{0}_Parameters", mApplicationModel.Name));
-                    Process.Start(filePath);
+                    Process.Start(new ProcessStartInfo() { FileName = filePath, UseShellExecute = true });
                 }
             }
             catch (System.Exception ex)

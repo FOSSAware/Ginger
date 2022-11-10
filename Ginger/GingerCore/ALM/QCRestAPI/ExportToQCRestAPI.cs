@@ -16,8 +16,9 @@ limitations under the License.
 */
 #endregion
 
-using ALM_Common.DataContracts;
-using ALMRestClient;
+//using ALM_Common.DataContracts;
+using AlmDataContractsStd.Enums;
+using ALMRestClientStd;
 using Amdocs.Ginger.Common;
 using Amdocs.Ginger.Common.InterfacesLib;
 using Amdocs.Ginger.IO;
@@ -25,7 +26,7 @@ using Amdocs.Ginger.Repository;
 using GingerCore.Actions;
 using GingerCore.Activities;
 using GingerCore.Variables;
-using QCRestClient;
+using QCRestClientStd;
 using System;
 using System.Collections.Generic;
 using System.IO.Compression;
@@ -638,7 +639,7 @@ namespace GingerCore.ALM.QCRestAPI
             {
                 for (int indx = 0; indx < testCaseParams.Count; indx++)
                 {
-                    QCRestAPIConnect.DeleteEntity(ALM_Common.DataContracts.ResourceType.DESIGN_STEP_PARAMETERS, testCaseParams[indx].Id);
+                    QCRestAPIConnect.DeleteEntity(AlmDataContractsStd.Enums.ResourceType.DESIGN_STEP_PARAMETERS, testCaseParams[indx].Id);
                 }
             }
 
@@ -844,7 +845,7 @@ namespace GingerCore.ALM.QCRestAPI
             {
                 itemWithValues.Fields.Add("parent-id", itemVals.GetType().GetProperty("ParentId").GetValue(itemVals, null));
             }
-            if (itemVals.GetType().GetProperty("Description") != null && itemVals.GetType().GetProperty("Description").GetValue(itemVals, null) != null && !isUpdate)
+            if (itemVals.GetType().GetProperty("Description") != null && itemVals.GetType().GetProperty("Description").GetValue(itemVals, null) != null && (!isUpdate || !string.IsNullOrEmpty(itemVals.Description)))
             {
                 itemWithValues.Fields.Add("description", EscapeChars(itemVals.GetType().GetProperty("Description").GetValue(itemVals, null)));
             }

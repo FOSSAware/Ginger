@@ -16,6 +16,8 @@ limitations under the License.
 */
 #endregion
 
+extern alias UIAComWrapperNetstandard;
+using UIAuto = UIAComWrapperNetstandard::System.Windows.Automation;
 using amdocs.ginger.GingerCoreNET;
 using Amdocs.Ginger.Common;
 using Amdocs.Ginger.Common.Enums;
@@ -31,10 +33,10 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Automation;
 
 namespace Ginger.UserControlsLib.UCListView
 {
@@ -426,6 +428,7 @@ namespace Ginger.UserControlsLib.UCListView
 
         private void xListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            //TODO:Create a event for Activity list selection changed and reload linked activity from SR
             if (mObjList != null && mObjList.SyncCurrentItemWithViewSelectedItem)
             {
                 SetSourceCurrentItemAsListSelectedItem();
@@ -486,6 +489,7 @@ namespace Ginger.UserControlsLib.UCListView
             List<ListItemOperation> listOperations = mListViewHelper.GetListOperations();
             if (listOperations != null && listOperations.Count > 0)
             {
+                xListOperationsPnl.Children.Clear();
                 xListOperationsPnl.Visibility = Visibility.Visible;
 
                 foreach (ListItemOperation operation in listOperations.Where(x => x.SupportedViews.Contains(mListViewHelper.PageViewMode)).ToList())
@@ -495,8 +499,8 @@ namespace Ginger.UserControlsLib.UCListView
                     operationBtn.ButtonImageType = operation.ImageType;
                     operationBtn.ToolTip = operation.ToolTip;
                     operationBtn.Margin = new Thickness(-2, 0, -2, 0);
-                    operationBtn.ButtonImageHeight = 16;
-                    operationBtn.ButtonImageWidth = 16;
+                    operationBtn.ButtonImageHeight = 14;
+                    operationBtn.ButtonImageWidth = 14;
                     operationBtn.ButtonFontImageSize = operation.ImageSize;
 
                     if (operation.ImageForeground == null)
@@ -538,6 +542,7 @@ namespace Ginger.UserControlsLib.UCListView
             List<ListItemOperation> extraOperations = mListViewHelper.GetListExtraOperations();
             if (extraOperations != null && extraOperations.Count > 0)
             {
+                ((MenuItem)(xListExtraOperationsMenu.Items[0])).Items.Clear();
                 xListExtraOperationsMenu.Visibility = Visibility.Visible;
                 foreach (ListItemOperation operation in extraOperations.Where(x => x.SupportedViews.Contains(mListViewHelper.PageViewMode)).ToList())
                 {

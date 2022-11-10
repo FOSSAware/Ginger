@@ -68,12 +68,12 @@ namespace Ginger.ALM
                     break;
 
                 case eALMType.RQM:
-                    AlmCore = new RQMCore();
+                    //AlmCore = new RQMCore();
                     AlmRepo = new RQMRepository();
                     break;
 
                 case eALMType.RALLY:
-                    AlmCore = new RallyCore();
+                    //AlmCore = new RallyCore();
                     AlmRepo = new RallyRepository();
                     break;
                 case eALMType.Jira:
@@ -436,12 +436,18 @@ namespace Ginger.ALM
             bool isExportSucc = true;
             if (AutoALMProjectConnect(eALMConnectType.Auto))
             {
-                string testPlanUploadPath = AlmRepo.SelectALMTestPlanPath();
-                if (testPlanUploadPath == null)
-                    return false;
-                string testLabUploadPath = AlmRepo.SelectALMTestLabPath();
-                if (testLabUploadPath == null)
-                    return false;
+                string testPlanUploadPath = null;
+                string testLabUploadPath = null;
+                if (ALMCore.GetDefaultAlmConfig().AlmType != eALMType.Jira)
+                {
+                    testPlanUploadPath = AlmRepo.SelectALMTestPlanPath();
+                    if (testPlanUploadPath == null)
+                        return false;
+                    testLabUploadPath = AlmRepo.SelectALMTestLabPath();
+                    if (testLabUploadPath == null)
+                        return false;
+                }
+                
                 foreach (BusinessFlow bf in bfToExport)
                 {
                     if (!AlmRepo.ExportBusinessFlowToALM(bf, performSaveAfterExport, almConectStyle, testPlanUploadPath, testLabUploadPath))
@@ -521,7 +527,7 @@ namespace Ginger.ALM
             Mouse.OverrideCursor = null;
         }
 
-        public ObservableList<ExternalItemFieldBase> GetALMItemFieldsREST(bool online, ALM_Common.DataContracts.ResourceType resourceType, BackgroundWorker bw = null)
+        public ObservableList<ExternalItemFieldBase> GetALMItemFieldsREST(bool online, AlmDataContractsStd.Enums.ResourceType resourceType, BackgroundWorker bw = null)
         {
             ObservableList<ExternalItemFieldBase> latestALMFieldsREST = new ObservableList<ExternalItemFieldBase>();
             if (ALMIntegration.Instance.AutoALMProjectConnect())

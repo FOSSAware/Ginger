@@ -974,6 +974,8 @@ namespace GingerCore
             }
         }
 
+        public bool EnableEdit { get; set; }
+
         public override eImageType ItemImageType
         {
             get
@@ -1021,5 +1023,7 @@ namespace GingerCore
         {
             return nameof(Activity);
         }
+
+        public bool IsAutoLearned { get; set; }
     }
 }

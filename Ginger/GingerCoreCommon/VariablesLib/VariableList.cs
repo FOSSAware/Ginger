@@ -1,4 +1,4 @@
-#region License
+﻿#region License
 /*
 Copyright © 2014-2022 European Support Limited
 
@@ -84,13 +84,13 @@ namespace GingerCore.Variables
             }
         }
 
-        public override void GenerateAutoValue()
+        public override bool GenerateAutoValue(ref string errorMsg)
         {
             string[] listValues = Formula.Split(',');
             if (listValues.Length == 0)
             {
                 Value = string.Empty;
-                return;
+                return false;
             }
 
             if (RandomOrder)
@@ -104,6 +104,7 @@ namespace GingerCore.Variables
                 Value = listValues[CurrentValueIndex++];
                 if (CurrentValueIndex >= listValues.Length) CurrentValueIndex = 0;
             }
+            return true;
         }
 
         public override eImageType Image { get { return eImageType.VariableList; } }
@@ -125,6 +126,9 @@ namespace GingerCore.Variables
         public override bool SupportResetValue { get { return true; } }
 
         public override bool SupportAutoValue { get { return true; } }
+
+        public override bool IsObsolete { get { return true; } }
+
 
         public override bool SetValue(string value)
         {

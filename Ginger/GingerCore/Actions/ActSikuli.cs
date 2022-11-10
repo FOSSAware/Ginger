@@ -16,6 +16,8 @@ limitations under the License.
 */
 #endregion
 
+extern alias UIAComWrapperNetstandard;
+using UIAuto = UIAComWrapperNetstandard::System.Windows.Automation;
 using Amdocs.Ginger.Repository;
 using Amdocs.Ginger.Common.Repository;
 using GingerCore.Properties;
@@ -28,7 +30,7 @@ using System.Runtime.InteropServices;
 using GingerCore.Helpers;
 using System.Drawing.Imaging;
 using System.Drawing;
-using System.Windows.Automation;
+
 using GingerCore.Drivers;
 using GingerCoreNET.SolutionRepositoryLib.RepositoryObjectsLib.PlatformsLib;
 using Amdocs.Ginger.Common.InterfacesLib;
@@ -40,6 +42,7 @@ using System.Diagnostics;
 using System.Linq;
 using Amdocs.Ginger.Common.UIElement;
 using amdocs.ginger.GingerCoreNET;
+using GingerCore.DataSource;
 
 namespace GingerCore.Actions
 {
@@ -175,7 +178,7 @@ namespace GingerCore.Actions
 
         public override eImageType Image { get { return eImageType.BullsEye; } }
 
-        private List<AutomationElement> lstWindows = new List<AutomationElement>();
+        private List<UIAuto.AutomationElement> lstWindows = new List<UIAuto.AutomationElement>();
 
         public static new partial class Fields
         {
@@ -255,7 +258,8 @@ namespace GingerCore.Actions
 
         public void SetFocusToSelectedApplicationInstance()
         {
-            if (!string.IsNullOrEmpty(ProcessNameForSikuliOperation))
+            string processNameForSikuli = ValueExpression.Calculate(ProcessNameForSikuliOperation);
+            if (!string.IsNullOrEmpty(processNameForSikuli))
             {
                 if (lstWindows.Count == 0)
                 {
@@ -263,21 +267,22 @@ namespace GingerCore.Actions
                 }
                 if (lstWindows.Count != 0)
                 {
-                    WinAPIAutomation.ShowWindow(lstWindows.Where(m => m.Current.Name.Equals(ProcessNameForSikuliOperation)).First());
+                    WinAPIAutomation.ShowWindow(lstWindows.Where(m => m.Current.Name.Equals(processNameForSikuli)).First());
                     if (SetCustomResolution)
                     {
                         List<int> lstVal = GetCustomResolutionValues();
                         if (lstVal.Count == 2)
                         {
-                            WinAPIAutomation.ResizeExternalWindow(lstWindows.Where(m => m.Current.Name.Equals(ProcessNameForSikuliOperation)).First(), lstVal[0], lstVal[1]);
+                            WinAPIAutomation.ResizeExternalWindow(lstWindows.Where(m => m.Current.Name.Equals(processNameForSikuli)).First(), lstVal[0], lstVal[1]);
                         }
                     }
                 }
             }
         }
 
-        public override void Execute()
+        public override async void Execute()
         {
+            string veProcessName = ProcessNameForSikuliOperation;
             if (CheckIfImageValidAndIfPercentageValidAndSelectedApplicationValid())
             {
                 string logMessage = string.Empty;
@@ -342,10 +347,11 @@ namespace GingerCore.Actions
                 {
                     if (!ActSikuliOperation.Equals(eActSikuliOperation.GetValue))
                     {
-                        sikuliLauncher.Stop();
+                        await sikuliLauncher.Stop();
                     }
                 }
             }
+            ProcessNameForSikuliOperation = veProcessName;
         }
 
         private void sikuliLauncher_EvtLogMessage(object sender, EventArgs e)
@@ -379,7 +385,7 @@ namespace GingerCore.Actions
             List<object> lstAppWindow = uiHelper.GetListOfWindows();
             ActiveProcessWindowsList.Clear();
             lstWindows.Clear();
-            foreach (AutomationElement process in lstAppWindow)
+            foreach (UIAuto.AutomationElement process in lstAppWindow)
             {
                 // If the process appears on the Taskbar (if has a title)
                 // print the information of the process
@@ -388,6 +394,11 @@ namespace GingerCore.Actions
                     ActiveProcessWindowsList.Add(process.Current.Name);
                     lstWindows.Add(process);
                 }
+            }
+            if (!string.IsNullOrEmpty(ProcessNameForSikuliOperation) &&
+                !ActiveProcessWindowsList.Contains(ProcessNameForSikuliOperation))
+            {
+                ActiveProcessWindowsList.Add(ProcessNameForSikuliOperation);
             }
         }
 
@@ -480,6 +491,7 @@ namespace GingerCore.Actions
 
         private bool CheckIfImageValidAndIfPercentageValidAndSelectedApplicationValid()
         {
+            SetProcessAsPerVE();
             if (string.IsNullOrEmpty(ValueExpression.Calculate(PatternPath)))
             {
                 Error = "File Path is Empty";
@@ -581,6 +593,20 @@ namespace GingerCore.Actions
             }
 
             return lstVal;
+        }
+
+        private void SetProcessAsPerVE()
+        {
+            string calculateValue = GetInputParamCalculatedValue(nameof(ProcessNameForSikuliOperation));
+            bool bSimilar = ActiveProcessWindows.Any(p => p.Contains(calculateValue));
+            if (bSimilar)
+            {
+                ProcessNameForSikuliOperation = ActiveProcessWindows.First(p => p.Contains(calculateValue));
+            }
+            else
+            {
+                ProcessNameForSikuliOperation = String.Empty;
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-#region License
+﻿#region License
 /*
 Copyright © 2014-2022 European Support Limited
 
@@ -212,6 +212,14 @@ namespace GingerCore.Variables
                 var validFloat = ConvertStringToNumber(value);
                 return Math.Round(Convert.ToDouble(validFloat), Convert.ToInt32(mPrecisionValue)).ToString();
             }
+            else if (Convert.ToInt32(mPrecisionValue) > 0 && !value.Contains("."))
+            {
+                string val = value;
+                val += ".";
+                for (int i = 0; i < Convert.ToInt32(mPrecisionValue); i++)
+                    val += "0";
+                return val;
+            }
             else
             {
                 return value;
@@ -253,9 +261,11 @@ namespace GingerCore.Variables
 
 
 
-        public override void GenerateAutoValue()
+        public override bool GenerateAutoValue(ref string errorMsg)
         {
             //NA
+            errorMsg = "Generate Auto Value is not supported";
+            return false;
         }
 
         public override string GetFormula()

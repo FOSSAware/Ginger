@@ -17,6 +17,7 @@ limitations under the License.
 #endregion
 
 using Amdocs.Ginger.Common;
+using Amdocs.Ginger.Common.Repository.ApplicationModelLib.POMModelLib;
 using Amdocs.Ginger.Common.UIElement;
 using Amdocs.Ginger.Repository;
 using GingerCore.Actions;
@@ -475,7 +476,7 @@ namespace GingerCore.Drivers.InternalBrowserLib
                     st.Reset();
                     st.Start();
 
-                    while (!(e != null && (e.getAttribute("Displayed")==true || e.getAttribute("Enabled")==true)))
+                    while (!(e != null && ((bool)e.getAttribute("Displayed")==true || (bool)e.getAttribute("Enabled")==true)))
                     {
                         Thread.Sleep(100);
                         e = mFrmBrowser.TryGetActElementByLocator(act);
@@ -497,7 +498,7 @@ namespace GingerCore.Drivers.InternalBrowserLib
                     {
                         st.Start();
 
-                        while (e != null && e.getAttribute("Displayed") != true)
+                        while (e != null && (bool)e.getAttribute("Displayed") != true)
                         {
                             Thread.Sleep(100);
                             e = mFrmBrowser.TryGetActElementByLocator(act);
@@ -743,7 +744,7 @@ namespace GingerCore.Drivers.InternalBrowserLib
 
             //TODO: dup code with IBWindow, cretae validation - use one run.action using driver
             string s = "";
-            IHTMLElementCollection options = element.children;
+            IHTMLElementCollection options = (IHTMLElementCollection)element.children;
             foreach (IHTMLElement v in options)
             {
                 //TODO: decide on delimeter, const global for app
@@ -780,7 +781,7 @@ namespace GingerCore.Drivers.InternalBrowserLib
             IHTMLElement el = mFrmBrowser.TryGetActElementByLocator(Alink);
             if (el != null)
             {
-                Alink.AddOrUpdateReturnParamActual("Actual",el.getAttribute("href"));
+                Alink.AddOrUpdateReturnParamActual("Actual", (string)el.getAttribute("href"));
             }
         }
 
@@ -812,13 +813,13 @@ namespace GingerCore.Drivers.InternalBrowserLib
             if (actButton.ButtonAction == ActButton.eButtonAction.GetValue)
             {
 
-                 actButton.AddOrUpdateReturnParamActual("Actual",e1.getAttribute("Value"));
+                 actButton.AddOrUpdateReturnParamActual("Actual", (string)e1.getAttribute("Value"));
                 return;
             }
             else if (actButton.ButtonAction == ActButton.eButtonAction.IsDisabled)
             {
                 try {
-                    actButton.AddOrUpdateReturnParamActual("Actual",  e1.getAttribute("Disabled")); }
+                    actButton.AddOrUpdateReturnParamActual("Actual", (string)e1.getAttribute("Disabled")); }
                 catch (Exception ) {
                     if (actButton.GetReturnParam("Return Value") == "")
                         actButton.AddOrUpdateReturnParamActual("Actual","False");
@@ -886,7 +887,7 @@ namespace GingerCore.Drivers.InternalBrowserLib
         {
             IHTMLElement e1 =mFrmBrowser.TryGetActElementByLocator(cb);
             mshtml.IHTMLElement2 t = (mshtml.IHTMLElement2)e1;
-            if (e1.getAttribute("checked") == false)
+            if ((bool)e1.getAttribute("checked") == false)
             {
                 e1.setAttribute("checked", true);
             }
@@ -896,7 +897,7 @@ namespace GingerCore.Drivers.InternalBrowserLib
         {
             IHTMLElement e1 = mFrmBrowser.TryGetActElementByLocator(cb);
             mshtml.IHTMLElement2 t = (mshtml.IHTMLElement2)e1;
-            if (e1.getAttribute("checked") == false)
+            if ((bool)e1.getAttribute("checked") == false)
             {
                 e1.setAttribute("checked", true);
             }
@@ -910,7 +911,7 @@ namespace GingerCore.Drivers.InternalBrowserLib
         {
             IHTMLElement e1 = mFrmBrowser.TryGetActElementByLocator(cb);
             mshtml.IHTMLElement t = (mshtml.IHTMLElement)e1;
-            if (e1.getAttribute("checked") == true)
+            if ((bool)e1.getAttribute("checked") == true)
             {
                 e1.setAttribute("checked", false);
             }
@@ -987,7 +988,7 @@ namespace GingerCore.Drivers.InternalBrowserLib
             IHTMLElementCollection elm = mFrmBrowser.mDocument.all;
             foreach (IHTMLElement h in elm)
             {
-                if (h.tagName.ToUpper() == "INPUT" && h.getAttribute("TYPE").ToUpper() == "RADIO")
+                if (h.tagName.ToUpper() == "INPUT" && h.getAttribute("TYPE")?.ToString().ToUpper() == "RADIO")
                 {
                     switch (LocatorType)
                     {
@@ -1021,9 +1022,9 @@ namespace GingerCore.Drivers.InternalBrowserLib
             List<IHTMLElement> RBs = LocateRadioButtonElements(a, rb.LocateBy, rb.LocateValueCalculated);
             for (int i = 0; i < RBs.Count; i++)
             {
-                if (RBs[i].getAttribute("checked") == true)
+                if ((bool)RBs[i].getAttribute("checked") == true)
                 {
-                    rb.AddOrUpdateReturnParamActual("Actual", RBs[i].getAttribute("value"));
+                    rb.AddOrUpdateReturnParamActual("Actual", (string)RBs[i].getAttribute("value"));
                     return;
                 }
             }
@@ -1067,7 +1068,7 @@ namespace GingerCore.Drivers.InternalBrowserLib
             {
                 for (int i=0; i < sel.length-1;i++)
                 {
-                    if (sel.item(i).text==s) 
+                    if (sel.item(i).ToString() == s) 
                     {
                         sel.selectedIndex = i;
                         return;
@@ -1091,7 +1092,7 @@ namespace GingerCore.Drivers.InternalBrowserLib
                 dd.AddOrUpdateReturnParamActual("Actual", "ERROR - Element not Found");
                 return;
             }
-            dd.AddOrUpdateReturnParamActual("Actual", element.options[element.selectedIndex].value);
+            //dd.AddOrUpdateReturnParamActual("Actual", element.options[element.selectedIndex].value);
         }
 
         private void IsDropDownListPrepopulated(ActDropDownList dd)
@@ -1102,7 +1103,7 @@ namespace GingerCore.Drivers.InternalBrowserLib
                 dd.AddOrUpdateReturnParamActual("Actual", "ERROR - Element not Found");
                 return;
             }
-            dd.AddOrUpdateReturnParamActual("Actual", (element.options[element.selectedIndex].value.trim() != "").ToString());
+            //dd.AddOrUpdateReturnParamActual("Actual", (element.options[element.selectedIndex].value.trim() != "").ToString());
         }
 
         private void GetDropDownListFont(ActDropDownList dd)
@@ -1219,7 +1220,7 @@ namespace GingerCore.Drivers.InternalBrowserLib
             return list;
         }
         
-        async Task<List<ElementInfo>> IWindowExplorer.GetVisibleControls(List<eElementType> filteredElementType, ObservableList<ElementInfo> foundElementsList = null,bool isPOMLearn = false, string specificFramePath = null, List<string> relativeXpathTemplateList = null)
+        async Task<List<ElementInfo>> IWindowExplorer.GetVisibleControls(List<eElementType> filteredElementType, ObservableList<ElementInfo> foundElementsList = null,bool isPOMLearn = false, string specificFramePath = null, List<string> relativeXpathTemplateList = null, bool LearnScreenshotsOfElements = true, ObservableList<POMPageMetaData> PomMetaData = null)
         {
             //TODO: impl
             return null;

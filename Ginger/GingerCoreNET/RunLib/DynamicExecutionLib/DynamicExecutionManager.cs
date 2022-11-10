@@ -22,7 +22,6 @@ using Amdocs.Ginger.Common.InterfacesLib;
 using Amdocs.Ginger.CoreNET.Run.RunSetActions;
 using Amdocs.Ginger.CoreNET.RunLib.CLILib;
 using Amdocs.Ginger.Repository;
-using Ginger.Configurations;
 using Ginger.ExecuterService.Contracts;
 using Ginger.ExecuterService.Contracts.V1.ExecuterHandler.Requests;
 using Ginger.ExecuterService.Contracts.V1.ExecutionConfiguration;
@@ -43,8 +42,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
-using static Ginger.ExecuterService.Contracts.V1.ExecutionConfiguration.SealightsDetails;
-using static Ginger.Reports.ExecutionLoggerConfiguration;
+using Ginger.ExecuterService.Contracts;
+using static Ginger.Configurations.SealightsConfiguration;
 
 namespace Amdocs.Ginger.CoreNET.RunLib.DynamicExecutionLib
 {
@@ -511,31 +510,37 @@ namespace Amdocs.Ginger.CoreNET.RunLib.DynamicExecutionLib
             {
                 SealightsDetails sealightsDetails = new SealightsDetails();
 
-                sealightsDetails.SealightsEnable = solution.SealightsConfiguration.SealightsLog == SealightsConfiguration.eSealightsLog.Yes;
+                sealightsDetails.SealightsEnable = solution.SealightsConfiguration.SealightsLog == eSealightsLog.Yes;
+                sealightsDetails.SealightsUrl = solution.SealightsConfiguration.SealightsURL;
                 sealightsDetails.SealightsLabId = solution.SealightsConfiguration.SealightsLabId;
                 sealightsDetails.SealightsBSId = solution.SealightsConfiguration.SealightsBuildSessionID;
                 sealightsDetails.SealightsTestStage = solution.SealightsConfiguration.SealightsTestStage;
                 sealightsDetails.SealightsSessionTimeout = Convert.ToInt32(solution.SealightsConfiguration.SealightsSessionTimeout);
-                sealightsDetails.SealightsEntityLevel = (eSealightsEntityLevel)solution.SealightsConfiguration.SealightsReportedEntityLevel;
+                sealightsDetails.SealightsEntityLevel = (SealightsDetails.eSealightsEntityLevel)solution.SealightsConfiguration.SealightsReportedEntityLevel;
                 sealightsDetails.SealightsAgentToken = solution.SealightsConfiguration.SealightsAgentToken;
+                sealightsDetails.SealightsTestRecommendations = solution.SealightsConfiguration.SealightsTestRecommendations == eSealightsTestRecommendations.Yes;
+
 
                 //  Check Sealights's values on run-set levels
-                if (WorkSpace.Instance.RunsetExecutor.RunSetConfig.SealighsLabId != null)
+                if (WorkSpace.Instance.RunsetExecutor.RunSetConfig.SealightsLabId != null)
                 {
-                    sealightsDetails.SealightsLabId = runsetExecutor.RunSetConfig.SealighsLabId;
+                    sealightsDetails.SealightsLabId = runsetExecutor.RunSetConfig.SealightsLabId;
                 }
-                if (WorkSpace.Instance.RunsetExecutor.RunSetConfig.SealighsBuildSessionID != null)
+                if (WorkSpace.Instance.RunsetExecutor.RunSetConfig.SealightsBuildSessionID != null)
                 {
-                    sealightsDetails.SealightsBSId = runsetExecutor.RunSetConfig.SealighsBuildSessionID;
+                    sealightsDetails.SealightsBSId = runsetExecutor.RunSetConfig.SealightsBuildSessionID;
                 }
                 if (WorkSpace.Instance.RunsetExecutor.RunSetConfig.SealightsTestStage != null)
                 {
                     sealightsDetails.SealightsTestStage = runsetExecutor.RunSetConfig.SealightsTestStage;
                 }
+                if (WorkSpace.Instance.RunsetExecutor.RunSetConfig.SealightsTestRecommendationsRunsetOverrideFlag)
+                {
+                    sealightsDetails.SealightsTestRecommendations = runsetExecutor.RunSetConfig.SealightsTestRecommendations == eSealightsTestRecommendations.Yes;
+                }
 
                 executionConfig.SealightsDetails = sealightsDetails;
             }
-
 
             executionConfig.SolutionLocalPath = solution.Folder;
 
@@ -613,6 +618,7 @@ namespace Amdocs.Ginger.CoreNET.RunLib.DynamicExecutionLib
                 //
                 runner.RunInSimulationMode = gingerRunner.RunInSimulationMode;
                 runner.RunInVisualTestingMode = gingerRunner.RunInVisualTestingMode;
+                runner.KeepAgentsOpen = gingerRunner.KeepAgentsOn;
 
                 if (gingerRunner.BusinessFlowsRunList.Count > 0)
                 {
@@ -894,6 +900,21 @@ namespace Amdocs.Ginger.CoreNET.RunLib.DynamicExecutionLib
                 Reporter.ToLog(eLogLevel.INFO, string.Format("Using provided ExecutionID '{0}'.", runSetConfig.ExecutionID.ToString()));
             }
 
+            if (gingerExecConfig.SealightsDetails != null)
+            {
+                runSetConfig.SealightsBuildSessionID = gingerExecConfig.SealightsDetails.SealightsBSId;
+                runSetConfig.SealightsLabId = gingerExecConfig.SealightsDetails.SealightsLabId;
+                runSetConfig.SealightsTestStage = gingerExecConfig.SealightsDetails.SealightsTestStage;
+                if (gingerExecConfig.SealightsDetails.SealightsTestRecommendations != null)
+                {
+                    runSetConfig.SealightsTestRecommendations = (bool)gingerExecConfig.SealightsDetails.SealightsTestRecommendations ? eSealightsTestRecommendations.Yes : eSealightsTestRecommendations.No;
+                }
+                else
+                {
+                    runSetConfig.SealightsTestRecommendations = eSealightsTestRecommendations.No;
+                }
+            }
+
             if (!String.IsNullOrEmpty(gingerExecConfig.Runset.Description))
             {
                 runSetConfig.Description = gingerExecConfig.Runset.Description;
@@ -949,6 +970,10 @@ namespace Amdocs.Ginger.CoreNET.RunLib.DynamicExecutionLib
                     if (runnerConfig.RunInVisualTestingMode.HasValue)
                     {
                         gingerRunner.RunInVisualTestingMode = runnerConfig.RunInVisualTestingMode.Value;
+                    }
+                    if (runnerConfig.KeepAgentsOpen.HasValue)
+                    {
+                        gingerRunner.KeepAgentsOn = runnerConfig.KeepAgentsOpen.Value;
                     }
 
                     if (runnerConfig.EnvironmentName != null || runnerConfig.EnvironmentID != null)
@@ -1077,7 +1102,7 @@ namespace Amdocs.Ginger.CoreNET.RunLib.DynamicExecutionLib
                                     string error = string.Format("Failed to find shared Activities to be added to the Virtual Business Flow");
                                     throw new Exception(error);
                                 }
-                                WorkSpace.Instance.SolutionRepository.AddRepositoryItem(bf);
+                                WorkSpace.Instance.SolutionRepository.AddRepositoryItem(bf, true);
                             }
 
                             if (businessFlowRun == null)

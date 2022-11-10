@@ -82,7 +82,7 @@ namespace Ginger.BusinessFlowPages
             // Disable ScrollViewer's CanContentScroll property for smooth scrolling 
             xActivitiesListView.List.SetValue(ScrollViewer.CanContentScrollProperty, false);
 
-            if (mPageViewMode == Ginger.General.eRIPageViewMode.View)
+            if (mPageViewMode == Ginger.General.eRIPageViewMode.View|| mPageViewMode == General.eRIPageViewMode.ViewAndExecute)
             {
                 xActivitiesListView.IsDragDropCompatible = false;
             }
@@ -183,7 +183,8 @@ namespace Ginger.BusinessFlowPages
 
                     List<Activity> list = new List<Activity>();
                     list.Add((Activity)droppedItem);
-                    ActionsFactory.AddActivitiesFromSRHandler(list, mContext.BusinessFlow, activityGroupID, activityIndex);
+                    bool isPomActivity = ((Activity)droppedItem).IsAutoLearned;
+                    ActionsFactory.AddActivitiesFromSRHandler(list, mContext.BusinessFlow, activityGroupID, activityIndex, isPomActivity);
                     if (activityIndex != -1)
                     {
                         ListView.xListView.SelectedIndex = activityIndex;

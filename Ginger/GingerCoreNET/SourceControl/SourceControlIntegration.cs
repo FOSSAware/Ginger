@@ -187,11 +187,21 @@ namespace Ginger.SourceControl
                 {
                     return false;
                 }
-                RepositoryFolderBase repositoryFolderBase = null;
-                if (path != SourceControl.SolutionFolder)
+                if (path.Contains("@/"))
                 {
-                    repositoryFolderBase = WorkSpace.Instance.SolutionRepository.GetRepositoryFolderByPath(Path.GetDirectoryName(path));
-                    repositoryFolderBase.PauseFileWatcher();
+                    path = path.Replace("@/", "\\");
+                }
+                RepositoryFolderBase repositoryFolderBase = null;
+                if (path.EndsWith("xml"))
+                {
+                    if (path != SourceControl.SolutionFolder)
+                    {
+                        repositoryFolderBase = WorkSpace.Instance.SolutionRepository.GetRepositoryFolderByPath(Path.GetDirectoryName(path));
+                        if (repositoryFolderBase != null)
+                        {
+                            repositoryFolderBase.PauseFileWatcher();
+                        }
+                    }
                 }
 
                 if (!SourceControl.ResolveConflicts(path, side, ref error))
@@ -470,7 +480,7 @@ namespace Ginger.SourceControl
                 }
 
                 string ProjectURI = string.Empty;
-                if (WorkSpace.Instance.UserProfile.SourceControlType == SourceControlBase.eSourceControlType.SVN  && !( mSourceControl is  SVNSourceControlShellWrapper))
+                if (WorkSpace.Instance.UserProfile.SourceControlType == SourceControlBase.eSourceControlType.SVN && !(mSourceControl is SVNSourceControlShellWrapper))
                 {
 
                     if (WorkSpace.Instance.UserProfile.SourceControlURL.StartsWith("SVN", StringComparison.CurrentCultureIgnoreCase))

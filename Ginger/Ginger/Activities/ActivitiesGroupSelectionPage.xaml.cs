@@ -34,20 +34,40 @@ namespace Ginger.BusinessFlowPages
         BusinessFlow mBusinessFlow;
         GenericWindow mPageGenericWin = null;
         ActivitiesGroup mSelectedAG = null;
+        bool mAddPOMActivity = false;
 
-        public ActivitiesGroupSelectionPage(BusinessFlow businessFlow )
+        public ActivitiesGroupSelectionPage(BusinessFlow businessFlow, ActivitiesGroup parentGroup = null, bool AddPOMActivity = false)
         {
             InitializeComponent();
 
             mBusinessFlow = businessFlow;
-
+            mAddPOMActivity = AddPOMActivity;
             xAddGroupBtn.ButtonText = GingerDicser.GetTermResValue(eTermResKey.ActivitiesGroup, "New");
 
             xGroupComboBox.ItemsSource = mBusinessFlow.ActivitiesGroups;
             xGroupComboBox.DisplayMemberPath = nameof(ActivitiesGroup.Name);
             if (businessFlow.ActivitiesGroups.Count > 0)
             {
-                xGroupComboBox.SelectedItem = businessFlow.ActivitiesGroups[0];
+                if(parentGroup==null)
+                {
+                    xGroupComboBox.SelectedItem = businessFlow.ActivitiesGroups[0];
+                }
+                else
+                {
+                    xGroupComboBox.SelectedItem = parentGroup;
+                }
+              
+            }
+
+            if (mAddPOMActivity)
+            {
+                xRadioPanel.Visibility = Visibility.Collapsed;
+                xNoteLable.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                xRadioPanel.Visibility = Visibility.Visible;
+                xNoteLable.Visibility = Visibility.Visible;
             }
         }
 
@@ -73,8 +93,8 @@ namespace Ginger.BusinessFlowPages
         }
 
         public ActivitiesGroup ShowAsWindow(eWindowShowStyle windowStyle = eWindowShowStyle.Dialog, bool startupLocationWithOffset = false)
-        {            
-            string title = "Select " + GingerDicser.GetTermResValue(eTermResKey.ActivitiesGroup);
+        {
+            string title = "Configurations";
 
             ObservableList<Button> winButtons = new ObservableList<Button>();          
             Button selectBtn = new Button();
@@ -83,7 +103,7 @@ namespace Ginger.BusinessFlowPages
             winButtons.Add(selectBtn);
 
             this.Height = 200;
-            this.Width = 500;
+            this.Width = 600;
 
             GingerCore.General.LoadGenericWindow(ref mPageGenericWin, App.MainWindow, windowStyle, title, this, winButtons);
             return mSelectedAG;
@@ -100,6 +120,24 @@ namespace Ginger.BusinessFlowPages
                 Reporter.ToUser(eUserMsgKey.StaticWarnMessage, GingerDicser.GetTermResValue(eTermResKey.ActivitiesGroup) + " was not selected.");
             }
             mPageGenericWin.Close();
+        }
+
+        private void xLinkedInstance_Checked(object sender, RoutedEventArgs e)
+        {
+            if (xNoteLable == null)
+            {
+                return;
+            }
+            xNoteLable.Text = "Note - Linked instance will create a read only copy of Shared activity, any updates in this instance will be automatically saved on Shared Repository as well as all of its usage across solution.";
+        }
+
+        private void xRegularInstance_Checked(object sender, RoutedEventArgs e)
+        {
+            if (xNoteLable == null)
+            {
+                return;
+            }
+            xNoteLable.Text = "Note - Regular instance will create a copy of Shared Activity, Any updates in this instance needs explicit update to Shared repository instance and other instances in the solution.";
         }
     }
 }

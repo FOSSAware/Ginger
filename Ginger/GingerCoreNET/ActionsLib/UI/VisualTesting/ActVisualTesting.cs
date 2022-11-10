@@ -23,7 +23,9 @@ using Amdocs.Ginger.Common.InterfacesLib;
 using Amdocs.Ginger.Common.UIElement;
 using Applitools.Selenium;
 using GingerCore.Actions.VisualTesting;
+using GingerCore.Drivers;
 using GingerCoreNET.SolutionRepositoryLib.RepositoryObjectsLib.PlatformsLib;
+using OpenQA.Selenium;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -310,8 +312,15 @@ namespace GingerCore.Actions
         public void Execute(IVisualTestingDriver driver)
         {
             mDriver = driver;
-            CheckSetVisualAnalyzer();
-            CheckSetAppWindowSize();
+            mVisualAnalyzer = ((DriverBase)mDriver).GetVisualAnalyzer(VisualTestingAnalyzer);
+
+            if (mDriver is SeleniumDriver)
+            {
+                if(!CheckSetAppWindowSize())
+                {
+                    return;
+                }
+            }
             if (Amdocs.Ginger.Common.Context.GetAsContext(Context).Activity == null)
             {
                 Amdocs.Ginger.Common.Context.GetAsContext(Context).Activity = ((Drivers.DriverBase)mDriver).BusinessFlow.CurrentActivity;
@@ -335,7 +344,7 @@ namespace GingerCore.Actions
             }
         }
 
-        public void CheckSetAppWindowSize()
+        public bool CheckSetAppWindowSize()
         {
             switch (ChangeAppWindowSize)
             {
@@ -346,12 +355,37 @@ namespace GingerCore.Actions
                     break;
                 case eChangeAppWindowSize.Custom:
                     mDriver.ChangeAppWindowSize(Convert.ToInt32(GetInputParamCalculatedValue(nameof(SetAppWindowWidth))), Convert.ToInt32(GetInputParamCalculatedValue(nameof(SetAppWindowHeight))));
+                    Size size = mDriver.GetWebDriver().Manage().Window.Size;
+                    if (Convert.ToInt32(GetInputParamCalculatedValue(nameof(SetAppWindowWidth))) + 5  < size.Width)//+5 added to check with actual viewport/size of the browser which can be different by 2 0r 3 points
+                    {
+                        this.Error = string.Format("Unable to set custom width of web page to {0}, min supported width is {1}.", GetInputParamCalculatedValue(nameof(SetAppWindowWidth)), size.Width.ToString());
+                        mDriver.ChangeAppWindowSize(0, 0);
+                        return false;
+                    }
+                    else if (Convert.ToInt32(GetInputParamCalculatedValue(nameof(SetAppWindowWidth))) > size.Width)
+                    {
+                        this.Error = string.Format("Unable to set custom width of web page to {0}, max supported width is {1}.", GetInputParamCalculatedValue(nameof(SetAppWindowWidth)), size.Width.ToString());
+                        mDriver.ChangeAppWindowSize(0, 0);
+                        return false;
+                    }
+                    else if (Convert.ToInt32(GetInputParamCalculatedValue(nameof(SetAppWindowHeight))) + 5 < size.Height)//+5 added to check with actual viewport/size of the browser which can be different by 2 0r 3 points
+                    {
+                        this.Error = string.Format("Unable to set custom width of web page to {0}, min supported height is {1}.", GetInputParamCalculatedValue(nameof(SetAppWindowHeight)), size.Height.ToString());
+                        mDriver.ChangeAppWindowSize(0, 0);
+                        return false;
+                    }
+                    else if (Convert.ToInt32(GetInputParamCalculatedValue(nameof(SetAppWindowHeight))) > size.Height)
+                    {
+                        this.Error = string.Format("Unable to set custom width of web page to {0}, max supported height is {1}.", GetInputParamCalculatedValue(nameof(SetAppWindowHeight)), size.Height.ToString());
+                        mDriver.ChangeAppWindowSize(0, 0);
+                        return false;
+                    }
                     break;
                 case eChangeAppWindowSize.Resolution640x480:
                     mDriver.ChangeAppWindowSize(640, 480);
                     break;
                 case eChangeAppWindowSize.Resolution800x600:
-                    mDriver.ChangeAppWindowSize(800, 800);
+                    mDriver.ChangeAppWindowSize(800, 600);
                     break;
                 case eChangeAppWindowSize.Resolution1024x768:
                     mDriver.ChangeAppWindowSize(1024, 768);
@@ -367,8 +401,9 @@ namespace GingerCore.Actions
                     break;
                 case eChangeAppWindowSize.Resolution1920x1080:
                     mDriver.ChangeAppWindowSize(1920, 1080);
-                    break;                
+                    break;
             }
+            return true;
         }
 
         public List<int> GetWindowResolution()
@@ -467,8 +502,6 @@ namespace GingerCore.Actions
 
             AddScreenShot((Bitmap)baseImage.Clone(), "Baseline Image");
             AddScreenShot((Bitmap)targetImage.Clone(), "Target Image");
-            
-            CheckSetVisualAnalyzer();
 
             // Here we call the actual analyzer after everything is prepared
             mVisualAnalyzer.SetAction(mDriver, this);
@@ -477,32 +510,6 @@ namespace GingerCore.Actions
             //Add other info to output params
             AddImageInfo("Baseline image", baseImage);
             AddImageInfo("Target image", targetImage);
-        }
-
-        private void CheckSetVisualAnalyzer()
-        {
-            //Check what kind of comparison we have - Applitools, simple Bitmap or Elements comparison
-            switch (VisualTestingAnalyzer)
-            {
-                case eVisualTestingAnalyzer.BitmapPixelsComparison:
-                    if (mVisualAnalyzer is MagickAnalyzer) return;
-                    mVisualAnalyzer = new MagickAnalyzer();
-                    break;
-
-                case eVisualTestingAnalyzer.Applitools:
-                    if (mVisualAnalyzer is ApplitoolsAnalyzer) return;
-                    mVisualAnalyzer = new ApplitoolsAnalyzer();
-                    break;
-
-                case eVisualTestingAnalyzer.UIElementsComparison:
-                    if (mVisualAnalyzer is UIElementsAnalyzer) return;
-                    mVisualAnalyzer = new UIElementsAnalyzer();
-                    break;
-                case eVisualTestingAnalyzer.VRT:
-                    if (mVisualAnalyzer is VRTAnalyzer) return;
-                    mVisualAnalyzer = new VRTAnalyzer();
-                    break;
-            }
         }
 
         private void AddImageInfo(string txt, Bitmap image)
@@ -519,9 +526,9 @@ namespace GingerCore.Actions
 
             CheckSetAppWindowSize();
             TakeScreenShotforBaseline(driver);
-            
+
             // Call the actual analyzer to take/create the baseline needed
-            CheckSetVisualAnalyzer();
+            mVisualAnalyzer = ((DriverBase)mDriver).GetVisualAnalyzer(VisualTestingAnalyzer);
             mVisualAnalyzer.SetAction(driver, this);
             mVisualAnalyzer.CreateBaseline();
         }

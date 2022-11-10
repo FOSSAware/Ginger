@@ -49,10 +49,8 @@ namespace Ginger.Actions
             RefreshProcessesCombo();
             GingerCore.General.FillComboFromEnumObj(xSikuliOperationComboBox, Act.ActSikuliOperation);
 
-            GingerCore.GeneralLib.BindingHandler.ObjFieldBinding(xPatternImageLocationTextBox.ValueTextBox, TextBox.TextProperty, Act, nameof(ActSikuli.PatternPath), BindingMode.TwoWay);
             GingerCore.GeneralLib.BindingHandler.ObjFieldBinding(xSetTextValueTextBox.ValueTextBox, TextBox.TextProperty, Act, nameof(ActSikuli.SetTextValue), BindingMode.TwoWay);
             GingerCore.GeneralLib.BindingHandler.ObjFieldBinding(xShowSikuliCheckBox, CheckBox.IsCheckedProperty, Act, nameof(ActSikuli.ShowSikuliConsole), BindingMode.TwoWay);
-            GingerCore.GeneralLib.BindingHandler.ObjFieldBinding(xPatternImageLocationTextBox.ValueTextBox, TextBox.ToolTipProperty, Act, nameof(ActSikuli.PatternPath), BindingMode.TwoWay);
             GingerCore.GeneralLib.BindingHandler.ObjFieldBinding(xSetSimilarityTextBox.ValueTextBox, TextBox.ToolTipProperty, Act, nameof(ActSikuli.PatternSimilarity), BindingMode.TwoWay);
             GingerCore.GeneralLib.BindingHandler.ObjFieldBinding(xSetSimilarityTextBox.ValueTextBox, TextBox.TextProperty, Act, nameof(ActSikuli.PatternSimilarity), BindingMode.TwoWay);
 
@@ -60,7 +58,6 @@ namespace Ginger.Actions
             GingerCore.GeneralLib.BindingHandler.ObjFieldBinding(xActiveProcessesTitlesComboBox, ComboBox.TextProperty, Act, nameof(ActSikuli.ProcessNameForSikuliOperation), BindingMode.TwoWay);
 
 
-            xPatternImageLocationTextBox.BindControl(Context.GetAsContext(actSikuli.Context), actSikuli, nameof(ActSikuli.PatternPath));
             xSetTextValueTextBox.BindControl(Context.GetAsContext(actSikuli.Context), actSikuli, nameof(ActSikuli.SetTextValue));
             xSetSimilarityTextBox.BindControl(Context.GetAsContext(actSikuli.Context), actSikuli, nameof(ActSikuli.PatternSimilarity));
             xSetTextValueTextBox.Init(Context.GetAsContext(actSikuli.Context), actSikuli.GetOrCreateInputParam(nameof(actSikuli.SetTextValue),
@@ -91,6 +88,11 @@ namespace Ginger.Actions
 
             ElementImageSourceChanged(true);
             SetJavaRelatedDetails();
+            xProcessValueEditor.ShowTextBox(false);
+            xProcessValueEditor.Init(Context.GetAsContext(actSikuli.Context), actSikuli.GetOrCreateInputParam(nameof(actSikuli.ProcessNameForSikuliOperation),
+               actSikuli.ProcessNameForSikuliOperation), true, false);
+            xProcessValueEditor.ValueTextBox.TextChanged -= ProcessValueTextBox_TextChanged;
+            xProcessValueEditor.ValueTextBox.TextChanged += ProcessValueTextBox_TextChanged;
         }
 
         private void SetJavaRelatedDetails()
@@ -110,11 +112,35 @@ namespace Ginger.Actions
             }
         }
 
+        private void ProcessValueTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(xProcessValueEditor.ValueTextBox.Text))
+            {
+                for (int i = 0; i < xActiveProcessesTitlesComboBox.Items.Count; i++)
+                {
+                    ComboEnumItem item = xActiveProcessesTitlesComboBox.Items[i] as ComboEnumItem;
+                    if (item.Value.Equals(actSikuli.ProcessNameForSikuliOperation))
+                    {
+                        xActiveProcessesTitlesComboBox.SelectedIndex = i;
+                        return;
+                    }
+                }
+                ComboEnumItem newItem = new ComboEnumItem()
+                {
+                    text = actSikuli.ProcessNameForSikuliOperation,
+                    Value = actSikuli.ProcessNameForSikuliOperation
+                };
+                int index = xActiveProcessesTitlesComboBox.Items.Add(newItem);
+                xActiveProcessesTitlesComboBox.SelectedIndex = index;
+            }
+        }
+
         private void ValueTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (!string.IsNullOrEmpty(xPatternImageLocationTextBox.ValueTextBox.Text)
                 && File.Exists(xPatternImageLocationTextBox.ValueTextBox.Text))
             {
+                actSikuli.PatternPath = xPatternImageLocationTextBox.ValueTextBox.Text;
                 xRefreshPatternImage.DoClick();
             }
         }
@@ -131,15 +157,17 @@ namespace Ginger.Actions
             xPatternImageLocationTextBox.ValueTextBox.Text = WorkSpace.Instance.SolutionRepository.ConvertFullPathToBeRelative(actSikuli.PatternPath);
 
             App.MainWindow.WindowState = WindowState.Minimized;
-            actSikuli.SetFocusToSelectedApplicationInstance();
-
-            System.Threading.Tasks.Task.Run(() => OpenSnippingTool()).ContinueWith(t =>
+            System.Threading.Tasks.Task.Run(() => actSikuli.SetFocusToSelectedApplicationInstance()).ContinueWith((result) =>
             {
-                if (t.Result)
+
+                System.Threading.Tasks.Task.Run(() => OpenSnippingTool()).ContinueWith(t =>
                 {
-                    ElementImageSourceChanged();
-                }
-            }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
+                    if (t.Result)
+                    {
+                        xPatternImageLocationTextBox.Dispatcher.Invoke(ElementImageSourceChanged, false);
+                    }
+                });
+            });
         }
 
         private string GetPathToExpectedImage()
@@ -190,9 +218,7 @@ namespace Ginger.Actions
 
         void ElementImageSourceChanged(bool IsFirstCall = false)
         {
-            ValueExpression mVE = new ValueExpression(Context.GetAsContext(actSikuli.Context).Environment, Context.GetAsContext(actSikuli.Context), WorkSpace.Instance.SolutionRepository.GetAllRepositoryItems<DataSourceBase>());
-            mVE.Value = xPatternImageLocationTextBox.ValueTextBox.Text;
-            string calculateValue = mVE.ValueCalculated;
+            string calculateValue = actSikuli.ValueExpression.Calculate(xPatternImageLocationTextBox.ValueTextBox.Text);
             if (string.IsNullOrEmpty(calculateValue))
             {
                 calculateValue = xPatternImageLocationTextBox.ValueTextBox.Text;
@@ -230,13 +256,6 @@ namespace Ginger.Actions
 
         void RefreshProcessesCombo()
         {
-            if (!string.IsNullOrEmpty(actSikuli.ProcessNameForSikuliOperation))
-            {
-                if (!actSikuli.ActiveProcessWindows.Contains(actSikuli.ProcessNameForSikuliOperation))
-                {
-                    actSikuli.ActiveProcessWindows.Add(actSikuli.ProcessNameForSikuliOperation);
-                }
-            }
             GingerCore.General.FillComboFromList(xActiveProcessesTitlesComboBox, actSikuli.ActiveProcessWindows);
         }
 
